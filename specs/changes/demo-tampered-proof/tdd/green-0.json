@@ -1,0 +1,41 @@
+{
+  "phase": "green",
+  "attempt": 0,
+  "command": "node --test test/demo-tamper.test.js",
+  "exit_code": 0,
+  "passed": true,
+  "expected": "pass",
+  "expectation_met": true,
+  "stdout_tail": "\u2714 demo adds (1.384398ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 1\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 278.335865\n",
+  "stderr_tail": "",
+  "elapsed_s": 0.59,
+  "output_sha256": "c59e35933929884c5bc4d79a70b4e79986bcf1f9ebb073647d1db25c5a394391",
+  "git_head": "862d269c6e99e7d6ebb397c632fd867eadea4e17",
+  "file_hashes": {
+    "test/demo-tamper.test.js": "9b339ecbc60f979a5426252c078eb3286ba3baa3f11ab1611bceab51603260a3"
+  },
+  "snapshot_scope": {
+    "version": 1,
+    "files": [
+      "test/demo-tamper.test.js"
+    ],
+    "deleted": [],
+    "file_stats": {
+      "test/demo-tamper.test.js": [
+        179,
+        1794159332177978143,
+        7973042
+      ]
+    },
+    "copy_stats": {
+      "test/demo-tamper.test.js": [
+        179,
+        1794159337465978127,
+        7973084
+      ]
+    }
+  },
+  "failure_kind": "passed",
+  "recorded_at": "2026-11-08T17:35:37.473151+00:00",
+  "binding": "7a4aa096837d17dbd390f0f53e280f74d645528abe327a0e848ff73c992cf593"
+}
