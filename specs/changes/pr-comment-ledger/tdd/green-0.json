@@ -1,0 +1,53 @@
+{
+  "phase": "green",
+  "attempt": 0,
+  "command": "node --test test/github-action-ledger-comment.test.js test/github-action-verify-proof.test.js",
+  "exit_code": 0,
+  "passed": true,
+  "expected": "pass",
+  "expectation_met": true,
+  "stdout_tail": "e proof still renders a ledger that says so (0.28692ms)\n  \u2714 explainVerdict covers every validator verdict without crashing (41.148517ms)\n  \u2714 readProof returns null for a missing proof file (1.225309ms)\n\u2714 ledger rendering (issue #73) (50.866112ms)\n\u25b6 PR number resolution\n  \u2714 explicit pr-number wins over event and ref (0.432338ms)\n  \u2714 event payload pull_request.number is used when no explicit number (0.743837ms)\n  \u2714 refs/pull/<n>/merge is parsed as a fallback (2.279451ms)\n\u2714 PR number resolution (4.087124ms)\n\u25b6 ledger comment upsert\n  \u2714 creates a new comment when no ledger comment exists (126.139604ms)\n  \u2714 updates the existing ledger comment instead of creating a second one (15.994856ms)\n  \u2714 an API failure throws so the caller can record it without masking the verdict (6.547337ms)\n  \u2714 missing token / repo / pr number throw before any request (0.46607ms)\n\u2714 ledger comment upsert (149.589208ms)\n\u25b6 CLI entry with ledger posting\n  \u2714 post-comment=false keeps the old behaviour (exit 0, comment_posted false) (2668.970772ms)\n  \u2714 a valid proof posts a green ledger comment (exit 0) (2914.588203ms)\n  \u2714 a tampered proof still posts a red ledger comment, then exits 1 (2795.793341ms)\n  \u2714 action.yml declares the new ledger inputs and outputs (1.123807ms)\n\u2714 CLI entry with ledger posting (8380.952536ms)\n\u25b6 GitHub Action proof verification (issue #70)\n  \u2714 a valid sealed green proof verifies (exit 0, verdict valid) (2183.079882ms)\n  \u2714 a tampered proof fails with binding_mismatch (exit non-zero) (1526.957925ms)\n  \u2714 a test file edited after the seal fails with green_tree_mismatch (2103.485665ms)\n  \u2714 a missing proof fails with verdict missing (exit non-zero) (175.376721ms)\n  \u2714 the CLI entry exits 0 on a valid proof and 1 on a missing proof (3225.929974ms)\n  \u2714 action.yml declares the action inputs and points at the entry (0.883566ms)\n\u2714 GitHub Action proof verification (issue #70) (9218.283608ms)\n\u2139 tests 24\n\u2139 suites 5\n\u2139 pass 24\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 9665.051751\n",
+  "stderr_tail": "",
+  "elapsed_s": 9.92,
+  "output_sha256": "5f3d43db5183f0e5b58d7d0fba7f48844df7071575baa73fe7c61148a81bd574",
+  "git_head": "83e5ec2a5b34ab8aacd066f5b10536d547022b33",
+  "file_hashes": {
+    "test/github-action-ledger-comment.test.js": "5da4384b4c158b00b067e36512e824ec74860a61052c2333bcb81d4d2ba0a2ec",
+    "test/github-action-verify-proof.test.js": "15ac02f4a0d7b0459f3162ccbf38226ed0a3dfd0eea27b4eb2bc4493ab0eb932"
+  },
+  "snapshot_scope": {
+    "version": 1,
+    "files": [
+      "test/github-action-ledger-comment.test.js",
+      "test/github-action-verify-proof.test.js"
+    ],
+    "deleted": [],
+    "file_stats": {
+      "test/github-action-ledger-comment.test.js": [
+        16453,
+        1794158289392981402,
+        7926886
+      ],
+      "test/github-action-verify-proof.test.js": [
+        6888,
+        1794158882141979550,
+        7925690
+      ]
+    },
+    "copy_stats": {
+      "test/github-action-ledger-comment.test.js": [
+        16453,
+        1794158919456459421,
+        7972290
+      ],
+      "test/github-action-verify-proof.test.js": [
+        6888,
+        1794158919456871940,
+        7972291
+      ]
+    }
+  },
+  "failure_kind": "passed",
+  "recorded_at": "2026-11-08T17:28:39.462917+00:00",
+  "binding": "f2c924ed23e553e96bffad184ca1ec5a4571171cef346d910a75d513d298ce15"
+}
