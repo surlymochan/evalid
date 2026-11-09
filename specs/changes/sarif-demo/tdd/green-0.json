@@ -1,0 +1,41 @@
+{
+  "phase": "green",
+  "attempt": 0,
+  "command": "node --test test/demo-sarif.test.js",
+  "exit_code": 0,
+  "passed": true,
+  "expected": "pass",
+  "expectation_met": true,
+  "stdout_tail": "\u2714 sarif demo adds (1.342316ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 1\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 153.941763\n",
+  "stderr_tail": "",
+  "elapsed_s": 0.32,
+  "output_sha256": "9209bc09c2f6f1e108948c45d9996e7846fbd06c292bc1ee85efdc8801f6af86",
+  "git_head": "e077ce2928d81943abd528a6c753d65a5b7b01dd",
+  "file_hashes": {
+    "test/demo-sarif.test.js": "d5bded626abc6e0a00bfd8a69f5fa8dc820ffeb032d97921b1371a89a10e69dc"
+  },
+  "snapshot_scope": {
+    "version": 1,
+    "files": [
+      "test/demo-sarif.test.js"
+    ],
+    "deleted": [],
+    "file_stats": {
+      "test/demo-sarif.test.js": [
+        132,
+        1794202218260620707,
+        8759380
+      ]
+    },
+    "copy_stats": {
+      "test/demo-sarif.test.js": [
+        132,
+        1794202225338202187,
+        8759430
+      ]
+    }
+  },
+  "failure_kind": "passed",
+  "recorded_at": "2026-11-09T05:30:25.343699+00:00",
+  "binding": "71526a01eb0163980e43296591178aa20f171e6201feaad0b266640eeb676e10"
+}
