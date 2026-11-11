@@ -10,7 +10,7 @@ Patch release. Two merged PRs since 0.5.22, verified end to end in CI and locall
 
 Honest note, stated plainly: the three mismatch verdicts rest substantially on replay fidelity, not PR quality — a mismatch means the claim could not be reproduced from the diff alone, not that the PR itself was bad. Known limitations, left for a follow-up slice: G3 (`bun test` not recognised), G4 (`node_modules` snapshot mismatch), prose package-scope hints, and RED / baseline commit scope.
 
-Acceptance debt, stated plainly: the MiniMax full-matrix bench batch (15 instances × 4 arms × reps 3) reached 135/135 complete on 2026-11-10, but the issue #5 acceptance ledger tick-off (P1-2, P1-3, P2-1, P2-3) is still pending — no bench numbers are claimed in this release.
+Acceptance ledger, stated plainly: the issue #5 ledger is settled as a conclusion on the MiniMax full-matrix recheck (135/135 complete, 2026-11-10) — P2-1 passed, P1-2 / P1-3 / P2-3 did not pass — so no bench numbers are claimed in this release.
 
 ## 0.5.22 - Milestone M4 "lite fast track" accepted
 
@@ -24,7 +24,7 @@ Honest note, stated plainly: the literal `xflow proof --track yolo` still exits 
 
 Follow-up filed, not fixed here: the I6b replay tree never contains `node_modules` (issue #111, open) — any test importing an npm dependency reports `no_test_evidence` on replay. The acceptance run worked around it by prefixing the TDD command with `npm ci`; no tool code was changed for this release.
 
-Acceptance debt, stated plainly: the MiniMax full-matrix bench batch (15 instances × 4 arms × reps 3) reached 135/135 complete on 2026-11-10, but the issue #5 acceptance ledger tick-off (P1-2, P1-3, P2-1, P2-3) is still pending — no bench numbers are claimed in this release.
+Acceptance ledger, stated plainly: the issue #5 ledger is settled as a conclusion on the MiniMax full-matrix recheck (135/135 complete, 2026-11-10) — P2-1 passed, P1-2 / P1-3 / P2-3 did not pass — so no bench numbers are claimed in this release.
 
 ## 0.5.21 - Agent progress streaming (external contribution #95)
 
