@@ -1,0 +1,111 @@
+{
+  "phase": "green",
+  "attempt": 0,
+  "command": "node --test test/xflow-sarif.test.js",
+  "exit_code": 0,
+  "passed": true,
+  "expected": "pass",
+  "expectation_met": true,
+  "stdout_tail": "\u25b6 proofToSarif\n  \u2714 a clean proof produces zero results (3.626993ms)\n  \u2714 a failed proof yields one finding per gap, located at the proof file (35.146414ms)\n  \u2714 a failed proof with no recorded gap still yields one finding, never zero (0.845258ms)\n\u2714 proofToSarif (43.769765ms)\n\u25b6 auditReportToSarif\n  \u2714 a verified audit produces zero results (1.21259ms)\n  \u2714 a claim/replay count mismatch carries the claimed and replayed numbers (1.461353ms)\n  \u2714 a replay that could not run is a warning, not an error (0.824748ms)\n  \u2714 a snapshot-mismatch seal yields one finding per broken file (1.073892ms)\n  \u2714 an infrastructure seal verdict produces no finding (0.46636ms)\n  \u2714 an unexecuted assertion carries its real file and line (0.681884ms)\n\u2714 auditReportToSarif (6.788918ms)\n\u25b6 validateSarif (offline)\n  \u2714 the local minimal schema file exists and names the enforced keys (0.834943ms)\n  \u2714 rejects a wrong version, a missing message, an undeclared rule, and a line 0 (1.048764ms)\n\u2714 validateSarif (offline) (2.208234ms)\n\u25b6 writeSarifFile\n  \u2714 writes a valid document and refuses a missing directory with an actionable error (3.170759ms)\n  \u2714 refuses to write an invalid document (0.659279ms)\n\u2714 writeSarifFile (4.156327ms)\n\u25b6 xflow audit --sarif (CLI)\n  \u2714 writes an empty-results SARIF for a no-claims audit (262.334958ms)\n  \u2714 a --sarif path in a missing directory fails with an actionable error, exit 2 (233.906084ms)\n  \u2714 a tampered seal yields a binding-mismatch finding naming the seal file (522.324015ms)\n\u2714 xflow audit --sarif (CLI) (1018.986368ms)\n\u2139 tests 16\n\u2139 suites 5\n\u2139 pass 16\n\u2139 fail 0\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 1349.885109\n",
+  "stderr_tail": "",
+  "elapsed_s": 1.56,
+  "output_sha256": "ed10ffc5b6d219009b7377fe8f90815916b95ec1f89c59b53187679178628b90",
+  "git_head": "36775d73c1db4fbdc93108eb14d502a571f5b5b1",
+  "file_hashes": {
+    "test/xflow-sarif.test.js": "64bcb45ae86c41feadb751dea85990bcdc53776f73a777184267dfa20352a79b"
+  },
+  "snapshot_scope": {
+    "version": 1,
+    "files": [
+      "test/xflow-sarif.test.js"
+    ],
+    "deleted": [],
+    "file_stats": {
+      "test/xflow-sarif.test.js": [
+        18242,
+        1794426635649722805,
+        12616655
+      ]
+    },
+    "copy_stats": {
+      "test/xflow-sarif.test.js": [
+        18242,
+        1794427313697065412,
+        12624975
+      ]
+    }
+  },
+  "install": {
+    "tool": "npm",
+    "command": "npm ci --no-audit --no-fund",
+    "lockfile": "package-lock.json",
+    "lockfile_sha256": "099b68b4678c2972b220bca727ec7eac0d8e63260896ea95cd358d49fa4d6117",
+    "package_json_sha256": "90494e12e6f5f3a57207490271f8f5302ead2690e442fa3c01b9c2a0b2b52211",
+    "installed": {
+      "@bcoe/v8-coverage": "1.0.2",
+      "@istanbuljs/schema": "0.1.6",
+      "@jridgewell/sourcemap-codec": "1.6.0",
+      "@jridgewell/resolve-uri": "3.1.2",
+      "@jridgewell/trace-mapping": "0.3.31",
+      "@types/istanbul-lib-coverage": "2.0.6",
+      "ajv": "8.18.0",
+      "ansi-regex": "6.5.0",
+      "ansi-styles": "6.2.3",
+      "argparse": "3.0.4",
+      "balanced-match": "4.0.4",
+      "c8": "12.0.0",
+      "brace-expansion": "5.0.12",
+      "emoji-regex": "10.6.0",
+      "escalade": "3.2.0",
+      "convert-source-map": "2.0.0",
+      "cross-spawn": "7.0.6",
+      "fast-uri": "3.1.0",
+      "find-up": "5.0.0",
+      "foreground-child": "3.3.1",
+      "get-caller-file": "2.0.5",
+      "get-east-asian-width": "1.7.0",
+      "fast-deep-equal": "3.1.3",
+      "html-escaper": "2.0.2",
+      "istanbul-lib-coverage": "3.2.2",
+      "isexe": "2.0.0",
+      "glob": "13.0.7",
+      "istanbul-lib-report": "3.0.1",
+      "istanbul-reports": "3.2.0",
+      "js-yaml": "5.5.0",
+      "json-schema-traverse": "1.0.0",
+      "locate-path": "6.0.0",
+      "lru-cache": "11.5.3",
+      "has-flag": "4.0.0",
+      "make-dir": "4.0.0",
+      "minimatch": "10.2.6",
+      "minipass": "7.1.3",
+      "p-limit": "3.1.0",
+      "p-locate": "5.0.0",
+      "path-exists": "4.0.0",
+      "path-key": "3.1.1",
+      "path-scurry": "2.0.2",
+      "playwright-core": "1.65.0",
+      "playwright": "1.65.0",
+      "require-from-string": "2.0.2",
+      "semver": "7.8.6",
+      "shebang-command": "2.0.0",
+      "shebang-regex": "3.0.0",
+      "signal-exit": "4.1.0",
+      "string-width": "8.3.0",
+      "strip-ansi": "7.2.0",
+      "supports-color": "7.2.0",
+      "test-exclude": "8.0.0",
+      "v8-to-istanbul": "9.3.0",
+      "which": "2.0.2",
+      "y18n": "5.0.8",
+      "yargs-parser": "21.1.1",
+      "yocto-queue": "0.1.0",
+      "wrap-ansi": "9.0.2",
+      "yargs": "18.2.0",
+      "cliui": "9.0.1"
+    }
+  },
+  "failure_kind": "passed",
+  "recorded_at": "2026-11-11T20:01:53.806484+00:00",
+  "binding": "a3681e8b6c45647eaa68d8472108323824c9dd40374ef829ee53306661018cf5"
+}
