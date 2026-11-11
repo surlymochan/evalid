@@ -1086,8 +1086,9 @@ export function supplyGoRustDeps(workdir, options = {}) {
     record('go', 'go mod download all', runShell(workdir, [go, 'mod', 'download', 'all'], timeoutMs));
   }
   if (manifests.cargoToml && (!only || only.includes('cargo'))) {
+    const command = manifests.cargoLock ? 'cargo fetch --locked' : 'cargo fetch';
     const args = manifests.cargoLock ? [cargo, 'fetch', '--locked'] : [cargo, 'fetch'];
-    record('cargo', args.join(' '), runShell(workdir, args, timeoutMs));
+    record('cargo', command, runShell(workdir, args, timeoutMs));
   }
   return results;
 }
