@@ -13,6 +13,7 @@ import {
   isJavaScriptTestFile,
   isPythonTestFile,
   isTestCommand,
+  listBunCachePackages,
   parseAuditTarget,
   parseClaimCounts,
   parseDiffFiles,
@@ -702,6 +703,58 @@ describe('node_modules snapshot consistency (M6 slice 1, #132)', () => {
       assert.equal(readLockfileEntries(root).get('js-yaml').version, '4.1.0');
     } finally {
       cleanup(root);
+    }
+  });
+
+  test('listBunCachePackages reads bun .bun store dirs (scoped, hashed)', () => {
+    const root = makeTree({
+      'node_modules/.bun/@ai-sdk+provider@3.0.8/package.json': { name: '@ai-sdk/provider', version: '3.0.8' },
+      'node_modules/.bun/typescript@7.0.2/package.json': { name: 'typescript', version: '7.0.2' },
+      'node_modules/.bun/@anthropic-ai+claude-agent-sdk@0.3.306+02a3a1e1642d8bd3/package.json': { name: '@anthropic-ai/claude-agent-sdk', version: '0.3.306' },
+    });
+    try {
+      const cache = listBunCachePackages(join(root, 'node_modules'));
+      assert.deepEqual([...cache.get('@ai-sdk/provider')], ['3.0.8']);
+      assert.deepEqual([...cache.get('typescript')], ['7.0.2']);
+      assert.deepEqual([...cache.get('@anthropic-ai/claude-agent-sdk')], ['0.3.306']);
+      assert.deepEqual(listBunCachePackages(join(makeTree({}), 'node_modules')).size, 0);
+    } finally {
+      cleanup(root);
+    }
+  });
+
+  test('bun-installed tree: packages in .bun store count as installed', () => {
+    // omo#8014: bun keeps most packages in node_modules/.bun and only
+    // symlinks a subset to the top level; a top-level-only scan
+    // over-reports "missing". A package present in .bun at the
+    // lockfile version counts as installed; present only at another
+    // version is drift, not missing.
+    const bunLock = `{
+      "lockfileVersion": 1,
+      "workspaces": {},
+      "packages": {
+        "js-yaml": ["js-yaml@4.1.0", "", {}, "sha512-abc=="],
+        "cached-pkg": ["cached-pkg@1.0.0", "", {}, "sha512-qq=="],
+        "drifted-pkg": ["drifted-pkg@2.0.0", "", {}, "sha512-rr=="],
+        "gone-pkg": ["gone-pkg@3.0.0", "", {}, "sha512-ss=="],
+      },
+    }`;
+    const workdir = makeTree({
+      'package.json': { name: 'fixture' },
+      'bun.lock': bunLock,
+      'node_modules/js-yaml/package.json': { name: 'js-yaml', version: '4.1.0' },
+      'node_modules/.bun/cached-pkg@1.0.0/package.json': { name: 'cached-pkg', version: '1.0.0' },
+      'node_modules/.bun/drifted-pkg@2.0.1/package.json': { name: 'drifted-pkg', version: '2.0.1' },
+    });
+    try {
+      const check = checkNodeModulesSnapshot(workdir, null, { diffFiles: ['src/index.js'] });
+      assert.equal(check.status, 'inconsistent');
+      assert.deepEqual(check.differences, [
+        'node_modules/drifted-pkg/package.json: version 2.0.1 (bun .bun store) vs 2.0.0 (lockfile)',
+        'node_modules/gone-pkg: missing in replay tree (expected 3.0.0)',
+      ]);
+    } finally {
+      cleanup(workdir);
     }
   });
 

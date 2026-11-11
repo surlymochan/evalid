@@ -656,6 +656,43 @@ export function readLockfileEntries(dir) {
   return readPackageLockEntries(dir) ?? readBunLockEntries(dir);
 }
 
+/**
+ * Bun's install layout: packages live in `node_modules/.bun/` as
+ * content-addressed dirs (`name@version`, scoped names with `/`
+ * written as `+`, plus an optional `+<hash>` disambiguator), and only
+ * a subset is symlinked to the top level. A top-level-only scan
+ * therefore undercounts a bun-installed tree (omo#8014: 66 top-level
+ * entries vs 661 cache dirs). Returns a Map of name -> Set of
+ * versions found in the cache, or an empty Map when there is no
+ * `.bun` dir (npm trees).
+ */
+export function listBunCachePackages(nodeModulesDir) {
+  const found = new Map();
+  const cacheDir = join(nodeModulesDir, '.bun');
+  let entries;
+  try {
+    entries = readdirSync(cacheDir, { withFileTypes: true });
+  } catch {
+    return found;
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const raw = entry.name;
+    const at = raw.lastIndexOf('@');
+    if (at <= 0) continue;
+    // The version part may carry a `+<hash>` disambiguator (or semver
+    // build metadata); the version is the part before the first `+`.
+    const version = raw.slice(at + 1).split('+')[0];
+    if (!version) continue;
+    // Scoped names are written with `+` for `/` (`@ai-sdk+provider`
+    // is `@ai-sdk/provider`); unscoped names contain no `+`.
+    const name = raw.startsWith('@') ? raw.slice(0, at).replace('+', '/') : raw.slice(0, at);
+    if (!found.has(name)) found.set(name, new Set());
+    found.get(name).add(version);
+  }
+  return found;
+}
+
 /** Top-level installed packages under a node_modules dir: name -> { version }. */
 export function listInstalledPackages(nodeModulesDir) {
   const installed = new Map();
@@ -809,6 +846,10 @@ export function checkNodeModulesSnapshot(workdir, sourceDir, options = {}) {
   const exemptedPackages = [];
   if (expected) {
     const installed = listInstalledPackages(replayDir);
+    // Bun-installed trees keep most packages in node_modules/.bun
+    // (see listBunCachePackages); a package present there at the
+    // lockfile version counts as installed.
+    const bunCache = listBunCachePackages(replayDir);
     for (const [name, entry] of expected) {
       const version = typeof entry === 'string' ? entry : entry?.version;
       const optional = entry && typeof entry === 'object' && entry.optional === true;
@@ -822,6 +863,12 @@ export function checkNodeModulesSnapshot(workdir, sourceDir, options = {}) {
         // linux-x64/glibc) plus pruned optional transitives
         // (buildcheck/cpu-features/nan, @emnapi/*).
         if (optional) { exemptedPackages.push(name); continue; }
+        const cached = bunCache.get(name);
+        if (cached && cached.has(version)) continue;
+        if (cached && cached.size > 0) {
+          differences.push(`node_modules/${name}/package.json: version ${[...cached].sort().join(', ')} (bun .bun store) vs ${version} (lockfile)`);
+          continue;
+        }
         differences.push(`node_modules/${name}: missing in replay tree (expected ${version})`);
       } else if (got.version !== null && version !== undefined && got.version !== version) {
         differences.push(`node_modules/${name}/package.json: version ${got.version} (replay) vs ${version} (lockfile)`);
