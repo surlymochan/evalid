@@ -3,6 +3,16 @@
 All notable changes to this project are documented here. Detailed notes live in
 [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
+## [0.5.34] - 2026-11-12
+
+### Added
+- **M14 slice 2, codex half (PR #188, merged 2026-11-12T09:29:33Z, squash 86215407; evidence issue #187)**: replay of 3 real codex CLI streams recorded on gocc (codex-cli 0.166.0, read-only prompts, stdin from /dev/null) — normal `ls` (9 lines, 2 shell calls), normal `cat sample.txt` (7 lines, 1 shell call), killed `sleep 45` (4 lines, SIGTERM once item.started observed +5 s then SIGKILL, exit 143, no turn.completed). Replay (sink + checkPairing): pairing violations 0 on all three runs; the killed run's single call ends abandoned, 0 calls left running. Acceptance-2 terminal-state views render the same sequence. Tests: `test/agent-stream.test.js` 33 pass; full `npm test` 295/296, the 1 failure `test/i6d-acceptance-demo.test.js` reproduced identically on unmodified main (8081e71) — pre-existing environment failure.
+
+### Fixed
+- **Audit claim harvesting for pnpm/yarn and vitest/jest (PR #190, merged 2026-11-12T11:08:53Z, squash acef97bf; fixes issue #189 by external contributor MAOLVLHL)**: `xflow audit` no longer harvests pnpm runs as npm runs and now picks up yarn/vitest/jest claims. Second-party verification on the PR head (6b894521): module-level checks 12 pass; four suites 126 tests, 123 pass, the 3 failures same names and same cause as the clean-main baseline (pre-existing I6d pytest cases, `pytest` not on PATH in this VM), zero regression; `bin/xflow.js` mode 100755 kept; PR CI ledger + verify green; merged-main CI run 43206616380 success.
+
+Honest note, stated plainly: milestone M14 is **not** accepted in this release — slice 2's claude half still awaits a real `claude` stream-json recording made in the user's own terminal (issue #187 OPEN, codex half only). No milestone claim and no bench numbers in this release: the issue #5 ledger is settled as a conclusion on the MiniMax full-matrix recheck (135/135 complete, 2026-11-10) — P2-1 passed, P1-2 / P1-3 / P2-3 did not pass.
+
 ## [0.5.33] - 2026-11-12
 
 ### Fixed
