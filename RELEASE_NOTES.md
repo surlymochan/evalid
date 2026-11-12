@@ -1,5 +1,15 @@
 # Release Notes
 
+## 0.5.34 - Two merged PRs, no milestone acceptance
+
+Patch release. Two merged PRs since 0.5.33, verified end to end in CI and locally — M14 is not accepted yet, so this release carries no milestone claim.
+
+**M14 slice 2, codex half (PR #188, merged 2026-11-12T09:29:33Z, squash 86215407; evidence issue #187).** Replay of 3 real codex CLI streams recorded on gocc (codex-cli 0.166.0): normal `ls` (9 lines, 2 shell calls), normal `cat sample.txt` (7 lines, 1 shell call), killed `sleep 45` (4 lines, exit 143, no turn.completed). Pairing violations 0 on all three replays; the killed run's single call ends abandoned, 0 calls left running. Tests: `test/agent-stream.test.js` 33 pass; full `npm test` 295/296, the 1 failure `test/i6d-acceptance-demo.test.js` reproduced identically on unmodified main (8081e71) — pre-existing environment failure.
+
+**Audit claim harvesting for pnpm/yarn and vitest/jest (PR #190, merged 2026-11-12T11:08:53Z, squash acef97bf; fixes issue #189 by external contributor MAOLVLHL).** `xflow audit` no longer harvests pnpm runs as npm runs and now picks up yarn/vitest/jest claims. Second-party verification on the PR head: module-level checks 12 pass; four suites 126 tests, 123 pass, the 3 failures same names and same cause as the clean-main baseline (pre-existing I6d pytest cases, `pytest` not on PATH in this VM), zero regression; `bin/xflow.js` mode 100755 kept; PR CI ledger + verify green; merged-main CI run 43206616380 success.
+
+Honest note, stated plainly: milestone M14 is **not** accepted in this release — slice 2's claude half still awaits a real `claude` stream-json recording made in the user's own terminal (issue #187 OPEN, codex half only). No bench numbers in this release: the issue #5 ledger is settled as a conclusion on the MiniMax full-matrix recheck (135/135 complete, 2026-11-10) — P2-1 passed, P1-2 / P1-3 / P2-3 did not pass.
+
 ## 0.5.33 - Milestone M13 "声称抽取 A/B 口径修复" accepted
 
 Patch release. One merged PR since 0.5.32, verified end to end in CI and locally — and the milestone it completes is now accepted.
