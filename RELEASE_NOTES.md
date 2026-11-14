@@ -1,5 +1,19 @@
 # Release Notes
 
+## 0.5.35 - Milestone M15 "实时运行时验证（live verify）" accepted
+
+Milestone release. Three merged PRs since 0.5.34, verified end to end in CI and locally — and the milestone they complete is now accepted.
+
+**Milestone M15 "实时运行时验证（live verify）" — accepted (issue #69; acceptance detail issue #197, comment 6883627755; #192, comment 6883629465).** `xflow live` wraps an agent CLI run with live pairing checks and verifies claims in real time — on breach, `--enforce` kills the session on the spot. Slice 1 (PR #194, merged 2026-11-14T10:18:08Z, squash 71d39fa) adds the live session wrapper + streaming pairing checks; slice 2 (PR #196, merged 2026-11-14T11:49:55Z, squash 89f8e96) adds real-time claim verification + `--enforce` kill on breach.
+
+**claimedExit default rule fix (PR #199, merged 2026-11-14T19:58:41Z, squash e3332dc7; fixes issue #198).** `claimedExit` is no longer defaulted to 0 when failures are reported — a session that honestly reports partial failures (e.g. 34 pass / 7 fail) is no longer misjudged as breach on the exit code alone; when `claimedExit` is null the exit comparison is skipped and only counts are compared.
+
+**Acceptance evidence, all measured and second-party verified by the main round on merged main (e3332dc7), not worker claims.** ① Honest-report replay: 9 recorded replay sessions re-run, 15 checked / 15 confirmed / 0 breach / 0 unknown; the key session live_mwggxca7_e525b2eb flipped from breach to confirmed after the #198 fix, replay exit 1, counts 34/7/41. ② Injected fake agent: all three cases breach — case A (false claim "All 41 tests pass") judged breach (exit: claimed 0, replayed 1) and `--enforce` killed the session on the spot (exit 143); case B (inflated 41/0) and case C (false 33/7, `claimedExit` null taking the counts path) breach, counts path not weakened. ③ Real failing session replay: `npm test` re-run in place, exit 1, 41 tests / 34 pass / 7 fail, matching the agent's honest report and the replay counts exactly. ④ No regression: PR #199 full suite 806 tests, 801 pass, the 4 failures all pre-existing failures reproduced on clean main; merged-main CI run 43634979460 success.
+
+Honest note, stated plainly: ① acceptance criterion ③ changed by user ruling (2026-11-15 01:25): the original "accumulate real breach in the wild" bar is replaced by mechanism evidence — injected fake agent + real failure replay + re-run after the #198 fix. ② Wild real breach is still 0 cases, moved to non-blocking follow-up by the same ruling. claude stream coverage is still in follow-up under issue #187.
+
+Acceptance ledger, stated plainly: the issue #5 ledger is settled as a conclusion on the MiniMax full-matrix recheck (135/135 complete, 2026-11-10) — P2-1 passed, P1-2 / P1-3 / P2-3 did not pass — so no bench numbers are claimed in this release.
+
 ## 0.5.34 - Two merged PRs, no milestone acceptance
 
 Patch release. Two merged PRs since 0.5.33, verified end to end in CI and locally — M14 is not accepted yet, so this release carries no milestone claim.
