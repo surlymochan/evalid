@@ -20,6 +20,18 @@
  *   - `n/a`       the event carries no tool_call_id to pair (agent_start,
  *                 message_end, raw, agent_end with nothing left open)
  *
+ * M15 slice 2 (#195) adds claim checks: every `message_end` text is
+ * scanned for test-run and file-created claims (live-claims.js) and each
+ * claim is verified as the session runs. A completed check appends one
+ * extra ledger line — `{ seq, ts, event: 'claim_check', pairing: 'n/a',
+ * claim_kind, claim, verdict, note? }` — so ledger lines = normalized
+ * events + claim checks, and the summary gains a `claims` object
+ * ({checked, confirmed, breaches, unknown, enforced, enforcement,
+ * checks}). With `--enforce`, the first confirmed breach kills the
+ * child (SIGTERM, SIGKILL after a 2s grace) and the session ends
+ * non-zero; a breach confirmed after the agent already exited cleanly
+ * still forces exit code 1 in enforce mode.
+ *
  * Post-hoc proof, same caliber (`summarizePairing`): replay the saved raw
  * stream through `normalizeAgentEvents` + `checkPairing`; when the stream
  * never emitted `agent_end` (killed session), a synthetic `agent_end` with
@@ -44,6 +56,7 @@ import {
   createPairingTracker,
   normalizeAgentEvents,
 } from './agent-stream.js';
+import { createClaimChecker, LIVE_CLAIM_DRAIN_MS } from './live-claims.js';
 
 export const LIVE_LEDGER_VERSION = 1;
 
@@ -58,6 +71,7 @@ const SIGNAL_EXIT_CODES = Object.freeze({
 const ADAPTER_ALIASES = Object.freeze({
   codex: 'codex_cli',
   claude: 'claude_cli',
+  pi: 'pi_cli',
   auto: 'unknown',
 });
 
@@ -127,7 +141,7 @@ export function summarizePairing(events) {
 /**
  * Wrap one agent CLI invocation. Options:
  *   command      [program, ...args] (required)
- *   adapter      'codex' | 'claude' | 'auto' (default 'auto')
+ *   adapter      'codex' | 'claude' | 'pi' | 'auto' (default 'auto')
  *   ledgerPath   live ledger file (default .xflow/live/<run-id>/ledger.jsonl)
  *   streamPath   raw stream file (default <ledger dir>/stream.ndjson)
  *   summaryPath  summary file (default <ledger dir>/summary.json)
@@ -137,6 +151,14 @@ export function summarizePairing(events) {
  *   clock        () => ISO timestamp string (default () => new Date().toISOString())
  *   printSummary true to print the summary to stderr (default true)
  *   jsonSummary  true to print the summary as JSON instead of human lines
+ *   claims       { enabled, cwd, timeoutMs, enforce, run, drainMs } —
+ *                live claim verification (M15 slice 2, #195). enabled
+ *                defaults to true; cwd defaults to process.cwd();
+ *                timeoutMs per claim defaults to 120_000; enforce
+ *                (default false) kills the child on the first confirmed
+ *                breach and forces a non-zero exit; run is an injectable
+ *                test-command runner; drainMs caps the post-exit wait
+ *                for pending checks (default 300_000).
  *
  * Resolves (never rejects for a child failure) with
  *   { exitCode, signal, agentRunId, ledgerPath, streamPath, summaryPath,
@@ -191,6 +213,52 @@ export async function runLiveSession(options = {}) {
     }
   }
 
+  // M15 slice 2 (#195): live claim verification. The checker runs
+  // asynchronously behind a queue; a completed check appends one
+  // `claim_check` ledger line (seq drawn from the same counter, so the
+  // ledger stays monotonic) and, in enforce mode, a confirmed breach
+  // kills the child at once.
+  const claimsOptions = options.claims || {};
+  const claimsEnabled = claimsOptions.enabled !== false;
+  const claimsEnforce = claimsOptions.enforce === true;
+  let child = null;
+  let enforced = false;
+  let enforcement = null;
+  let finished = false;
+  const checker = claimsEnabled
+    ? createClaimChecker({
+      cwd: claimsOptions.cwd || process.cwd(),
+      timeoutMs: claimsOptions.timeoutMs,
+      run: claimsOptions.run,
+      onCheck: (check) => {
+        appendLedger({
+          seq: seq++,
+          ts: clock(),
+          event: 'claim_check',
+          pairing: 'n/a',
+          claim_kind: check.kind,
+          claim: check.command ?? check.path,
+          verdict: check.verdict,
+          ...(check.note ? { note: check.note } : {}),
+        });
+      },
+      onBreach: (check) => {
+        if (!claimsEnforce || finished || !child || child.killed) return;
+        enforced = true;
+        enforcement = {
+          signal: 'SIGTERM',
+          claim: check.command ?? check.path,
+          note: check.note ?? null,
+          at: clock(),
+        };
+        try { child.kill('SIGTERM'); } catch { /* already gone */ }
+        setTimeout(() => {
+          try { if (!child.killed) child.kill('SIGKILL'); } catch { /* already gone */ }
+        }, 2000).unref?.();
+      },
+    })
+    : null;
+
   function onLine(line) {
     if (!line) return;
     lines += 1;
@@ -208,14 +276,17 @@ export async function runLiveSession(options = {}) {
         if (event[key] !== undefined && event[key] !== null) record[key] = event[key];
       }
       appendLedger(record);
+      // Only the agent's own words are claims: tool output is never read.
+      if (checker && event.event === 'message_end' && typeof event.text === 'string' && event.text) {
+        checker.checkText(event.text);
+      }
     }
   }
 
   const splitter = createLineSplitter(onLine);
 
   return new Promise((resolvePromise) => {
-    let finishedSummary = null;
-    let child;
+    let finishing = null;
     try {
       child = spawnFn(command[0], command.slice(1), { stdio: ['inherit', 'pipe', 'inherit'] });
     } catch (error) {
@@ -247,91 +318,119 @@ export async function runLiveSession(options = {}) {
 
     function finish(exitCode, signal, error) {
       // 'error' (spawn failure) is followed by 'close': finish exactly once.
-      if (finishedSummary) return finishedSummary;
-      const endedAt = new Date();
-      // A killed session never emits agent_end: close the run through the same
-      // state machine so its open calls surface as unpaired_at_agent_end with
-      // the same seq the post-hoc proof assigns (events.length).
-      if (!sawAgentEnd) {
-        const synthetic = { seq, event: 'agent_end' };
-        for (const violation of tracker.observe(synthetic)) {
-          violations.push({ ...violation, seq });
+      if (finishing) return finishing;
+      finishing = (async () => {
+        finished = true;
+        const endedAt = new Date();
+        // Wait for in-flight claim checks so the summary reports every
+        // claim the session made; checks still pending at the cap are
+        // recorded `unknown` by the checker, never guessed.
+        if (checker) {
+          await checker.drain(claimsOptions.drainMs ?? LIVE_CLAIM_DRAIN_MS);
         }
-        appendLedger({ seq, ts: clock(), event: 'agent_end', pairing: 'n/a', synthetic: true });
-        seq += 1;
-      }
-      const openAtExit = tracker.drainOpen().map(([toolCallId, call]) => ({
-        tool_call_id: toolCallId,
-        tool: call.tool ?? null,
-      }));
-      const toolStarts = events.filter((event) => event.event === 'tool_start' && event.tool_call_id).length;
-      const toolEnds = events.filter((event) => event.event === 'tool_end' && event.tool_call_id).length;
-      const badEnds = violations.filter(
-        (violation) => violation.kind === 'unpaired_tool_end' || violation.kind === 'duplicate_tool_end',
-      ).length;
-      const summary = {
-        version: LIVE_LEDGER_VERSION,
-        agent_run_id: agentRunId,
-        command: [...command],
-        adapter: options.adapter || 'auto',
-        started_at: startedAt.toISOString(),
-        ended_at: endedAt.toISOString(),
-        duration_ms: endedAt - startedAt,
-        exit_code: exitCode,
-        signal: signal ?? null,
-        ledger_path: ledgerPath,
-        stream_path: streamPath,
-        summary_path: summaryPath,
-        lines,
-        events: events.length,
-        ledger_write_errors: ledgerErrors.ledger,
-        stream_write_errors: ledgerErrors.stream,
-        pairing: {
-          tool_starts: toolStarts,
-          tool_ends: toolEnds,
-          paired: toolEnds - badEnds,
-          violations: violations.map(({ kind, tool_call_id, seq: violationSeq }) => ({
-            kind,
-            tool_call_id,
-            seq: violationSeq,
-          })),
-          open_at_exit: openAtExit,
-          verdict: violations.length ? 'violations' : 'paired',
-        },
-      };
-      if (error) summary.error = String(error?.message || error);
-      try {
-        writeFileSync(summaryPath, `${JSON.stringify(summary, null, 2)}\n`);
-      } catch {
-        ledgerErrors.ledger += 1;
-      }
-      if (printSummary) {
-        const text = jsonSummary
-          ? JSON.stringify(summary)
-          : [
-              `live session ${agentRunId} finished: exit ${exitCode}${signal ? ` (signal ${signal})` : ''}`,
+        const claimsSummary = checker
+          ? { ...checker.summary(), enforced, enforcement }
+          : { checked: 0, confirmed: 0, breaches: 0, unknown: 0, enforced: false, enforcement: null, checks: [] };
+        // Enforce mode guarantees a non-zero exit when a breach was
+        // confirmed — even one confirmed after the agent already exited
+        // cleanly. A child killed by enforcement already exits non-zero
+        // (143 SIGTERM / 137 SIGKILL) and keeps that code.
+        let finalExit = exitCode;
+        if (claimsEnforce && claimsSummary.breaches > 0 && finalExit === 0) finalExit = 1;
+        // A killed session never emits agent_end: close the run through the same
+        // state machine so its open calls surface as unpaired_at_agent_end with
+        // the same seq the post-hoc proof assigns (events.length).
+        if (!sawAgentEnd) {
+          const synthetic = { seq, event: 'agent_end' };
+          for (const violation of tracker.observe(synthetic)) {
+            violations.push({ ...violation, seq });
+          }
+          appendLedger({ seq, ts: clock(), event: 'agent_end', pairing: 'n/a', synthetic: true });
+          seq += 1;
+        }
+        const openAtExit = tracker.drainOpen().map(([toolCallId, call]) => ({
+          tool_call_id: toolCallId,
+          tool: call.tool ?? null,
+        }));
+        const toolStarts = events.filter((event) => event.event === 'tool_start' && event.tool_call_id).length;
+        const toolEnds = events.filter((event) => event.event === 'tool_end' && event.tool_call_id).length;
+        const badEnds = violations.filter(
+          (violation) => violation.kind === 'unpaired_tool_end' || violation.kind === 'duplicate_tool_end',
+        ).length;
+        const summary = {
+          version: LIVE_LEDGER_VERSION,
+          agent_run_id: agentRunId,
+          command: [...command],
+          adapter: options.adapter || 'auto',
+          started_at: startedAt.toISOString(),
+          ended_at: endedAt.toISOString(),
+          duration_ms: endedAt - startedAt,
+          exit_code: finalExit,
+          signal: signal ?? null,
+          ledger_path: ledgerPath,
+          stream_path: streamPath,
+          summary_path: summaryPath,
+          lines,
+          events: events.length,
+          ledger_write_errors: ledgerErrors.ledger,
+          stream_write_errors: ledgerErrors.stream,
+          pairing: {
+            tool_starts: toolStarts,
+            tool_ends: toolEnds,
+            paired: toolEnds - badEnds,
+            violations: violations.map(({ kind, tool_call_id, seq: violationSeq }) => ({
+              kind,
+              tool_call_id,
+              seq: violationSeq,
+            })),
+            open_at_exit: openAtExit,
+            verdict: violations.length ? 'violations' : 'paired',
+          },
+          claims: claimsSummary,
+        };
+        if (error) summary.error = String(error?.message || error);
+        try {
+          writeFileSync(summaryPath, `${JSON.stringify(summary, null, 2)}\n`);
+        } catch {
+          ledgerErrors.ledger += 1;
+        }
+        if (printSummary) {
+          const claimsLine = claimsEnabled
+            ? `claims: ${claimsSummary.checked} checked, ${claimsSummary.confirmed} confirmed, `
+              + `${claimsSummary.breaches} breaches, ${claimsSummary.unknown} unknown`
+              + (claimsSummary.breaches > 0
+                ? ` — first breach: ${claimsSummary.checks.find((check) => check.verdict === 'breach')?.note ?? ''}`
+                : '')
+              + (enforced ? ' — enforced: session killed on breach' : '')
+            : 'claims: disabled';
+          const text = jsonSummary
+            ? JSON.stringify(summary)
+            : [
+              `live session ${agentRunId} finished: exit ${finalExit}${signal ? ` (signal ${signal})` : ''}`,
               `pairing: ${toolStarts} tool calls started, ${toolEnds} ended, ${toolEnds - badEnds} paired, `
                 + `${violations.length} violations, verdict ${summary.pairing.verdict}`,
+              claimsLine,
               `ledger: ${ledgerPath}`,
             ].join('\n');
-        try {
-          stderr.write(`${text}\n`);
-        } catch {
-          // Summary delivery must never change the exit code.
+          try {
+            stderr.write(`${text}\n`);
+          } catch {
+            // Summary delivery must never change the exit code.
+          }
         }
-      }
-      finishedSummary = {
-        exitCode,
-        signal: signal ?? null,
-        agentRunId,
-        ledgerPath,
-        streamPath,
-        summaryPath,
-        events,
-        summary,
-        ...(error ? { error: String(error?.message || error) } : {}),
-      };
-      return finishedSummary;
+        return {
+          exitCode: finalExit,
+          signal: signal ?? null,
+          agentRunId,
+          ledgerPath,
+          streamPath,
+          summaryPath,
+          events,
+          summary,
+          ...(error ? { error: String(error?.message || error) } : {}),
+        };
+      })();
+      return finishing;
     }
   });
 }

@@ -7601,15 +7601,15 @@ async function handleLive(args) {
     return;
   }
   if (!command.length) {
-    console.error('Usage: xflow live [--ledger <path>] [--adapter codex|claude|auto] [--json] -- <agent cmd...>');
+    console.error('Usage: xflow live [--ledger <path>] [--adapter codex|claude|pi|auto] [--json] [--enforce] [--no-claims] -- <agent cmd...>');
     console.error('Missing agent command after -- (example: xflow live -- codex exec --json "list the files").');
     process.exitCode = 2;
     return;
   }
   const parsedArgs = parseCliArgs(flags);
   const adapter = parsedArgs.adapter || 'auto';
-  if (!['codex', 'claude', 'auto'].includes(adapter)) {
-    console.error(`Unknown adapter: ${adapter} (expected codex|claude|auto)`);
+  if (!['codex', 'claude', 'pi', 'auto'].includes(adapter)) {
+    console.error(`Unknown adapter: ${adapter} (expected codex|claude|pi|auto)`);
     process.exitCode = 2;
     return;
   }
@@ -7618,6 +7618,10 @@ async function handleLive(args) {
     adapter,
     ledgerPath: parsedArgs.ledger || undefined,
     jsonSummary: parsedArgs.json === true,
+    claims: {
+      enabled: parsedArgs.no_claims !== true,
+      enforce: parsedArgs.enforce === true,
+    },
   });
   if (result.error && result.exitCode === 127) {
     console.error(`live: failed to start ${command[0]}: ${result.error}`);
@@ -7629,7 +7633,7 @@ function printLiveHelp() {
   console.log(`
 xflow live — wrap an agent CLI run and verify tool pairing while it runs.
 
-Usage: xflow live [--ledger <path>] [--adapter codex|claude|auto] [--json] -- <agent cmd...>
+Usage: xflow live [--ledger <path>] [--adapter codex|claude|pi|auto] [--json] [--enforce] [--no-claims] -- <agent cmd...>
 
 The agent's stdout is passed through byte-for-byte; its stream-json lines are
 checked live with the M14 pairing invariant (tool_use/tool_result pairing).
@@ -7638,6 +7642,16 @@ tool_call_id, pairing verdict) beside the raw stream (stream.ndjson) and a
 summary (summary.json) whose pairing fields match a post-hoc replay of the
 stream through checkPairing. The summary is printed to stderr; the process
 exits with the agent's exit code.
+
+M15 slice 2 (#195): the agent's own words are also checked live. Every
+message_end text is scanned for test-run claims ("ran \`npm test\`, 12
+passed" — replayed and compared) and file-created claims ("created
+\`src/foo.js\`" — checked on disk). Each check lands in the ledger as a
+claim_check line and in summary.json under claims ({checked, confirmed,
+breaches, unknown, checks}); a claim whose evidence cannot be obtained is
+unknown, never confirmed and never a breach. With --enforce, the first
+confirmed breach kills the agent (SIGTERM, SIGKILL after 2s) and the
+session ends non-zero; --no-claims turns claim checking off.
 `);
 }
 
@@ -7651,7 +7665,7 @@ Usage:
   xflow corps --title <title>    Run heavy track through governed entry
   xflow proof --track corps      Verify final execution proof
   xflow audit --pr 75 [--json]   Audit a PR: replay its claimed test runs
-  xflow live -- <agent cmd...>   Wrap an agent CLI run: live pairing checks + ledger
+  xflow live -- <agent cmd...>   Wrap an agent CLI run: live pairing + claim checks, ledger, --enforce to kill on breach
   xflow trend [--repo .] [--since 2026-11-01]
                                  Claimed-vs-replayed trend from the proof ledger
   xflow doctor [--json]          Check local xflow readiness

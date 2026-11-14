@@ -136,7 +136,8 @@ export function normalizeAgentEvents(raw, options = {}) {
 
   const family = detectFamily(payload, adapter);
   const toolNames = options.toolNames instanceof Map ? options.toolNames : null;
-  const mapped = (family === 'claude' ? mapClaudePayload : mapCodexPayload)(payload, { toolNames })
+  const mapper = family === 'claude' ? mapClaudePayload : family === 'pi' ? mapPiPayload : mapCodexPayload;
+  const mapped = mapper(payload, { toolNames })
     .filter((event) => event && event.event);
   if (!mapped.length) return [];
   return mapped.map((event) => ({ seq, ...event }));
@@ -145,9 +146,54 @@ export function normalizeAgentEvents(raw, options = {}) {
 function detectFamily(payload, adapter) {
   if (adapter === 'claude_cli') return 'claude';
   if (adapter === 'codex_cli') return 'codex';
+  if (adapter === 'pi_cli') return 'pi';
   const type = String(payload.type || '');
   if (['system', 'assistant', 'result', 'user', 'stream_event'].includes(type)) return 'claude';
   return 'codex';
+}
+
+/**
+ * pi (`pi -p --mode json`, M15 slice 2 #195): pi emits its own event
+ * vocabulary. Tool calls are mapped ONLY from the tool_execution lines
+ * (one start + one end per executed call); the message_end line repeats
+ * the same calls as announcements, so its toolCall blocks are not mapped
+ * again — only its assistant text becomes a message_end, which is what
+ * claim checking reads.
+ */
+function mapPiPayload(payload) {
+  const type = String(payload.type || '');
+  switch (type) {
+    case 'agent_start':
+      return [{ event: 'agent_start', event_type: type }];
+    case 'agent_end':
+      return [{ event: 'agent_end', event_type: type }];
+    case 'message_end': {
+      const message = payload.message;
+      if (!message || message.role !== 'assistant' || !Array.isArray(message.content)) return [];
+      const text = message.content
+        .filter((block) => block?.type === 'text' && typeof block.text === 'string')
+        .map((block) => block.text)
+        .join('\n');
+      return text ? [{ event: 'message_end', event_type: 'assistant_text', text: truncateText(text) }] : [];
+    }
+    case 'tool_execution_start': {
+      const callId = callIdOf(payload.toolCallId);
+      return [toolStart(String(payload.toolName || 'tool'), stringifyArgs(payload.args ?? ''), type, callId)];
+    }
+    case 'tool_execution_end': {
+      const callId = callIdOf(payload.toolCallId);
+      const failed = payload.isError === true;
+      return [toolEnd(
+        String(payload.toolName || 'tool'),
+        type,
+        failed ? 1 : 0,
+        failed ? 'failed' : 'completed',
+        callId,
+      )];
+    }
+    default:
+      return [];
+  }
 }
 
 function mapCodexPayload(payload) {
