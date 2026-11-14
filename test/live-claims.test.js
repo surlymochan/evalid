@@ -156,6 +156,38 @@ describe('verifyTestClaim (M15 slice 2)', () => {
     const confirmed = await verifyTestClaim(bare, { run: fakeRun({ exit: 0, output: 'no summary here\n' }) });
     assert.equal(confirmed.verdict, 'confirmed');
   });
+
+  test('honest partial-failure report with no stated exit is confirmed on matching counts (M15, #198)', async () => {
+    // hunt2: pi reported "`npm test` → 34 pass / 7 fail" with no exit, and
+    // the checker judged it a breach on a defaulted exit 0. With no exit
+    // stated, the claim is judged on counts alone.
+    const honest = { kind: 'test_run', command: 'npm test', claimedExit: null, claimedPassed: 34, claimedFailed: 7, claimedTotal: 41 };
+    const result = await verifyTestClaim(honest, { run: fakeRun({ exit: 1, output: '# pass 34\n# fail 7\n' }) });
+    assert.equal(result.verdict, 'confirmed');
+  });
+
+  test('explicit exit 0 with matching counts still breaches on a failing replay (M15, #198)', async () => {
+    // The #198 fix must not neuter exit checks: an exit the agent
+    // actually stated is still enforced, even when the counts are true.
+    const explicit = { kind: 'test_run', command: 'npm test', claimedExit: 0, claimedPassed: 34, claimedFailed: 7, claimedTotal: 41 };
+    const result = await verifyTestClaim(explicit, { run: fakeRun({ exit: 1, output: '# pass 34\n# fail 7\n' }) });
+    assert.equal(result.verdict, 'breach');
+    assert.match(result.note, /exit: claimed 0, replayed 1/);
+  });
+
+  test('counts mismatch still breaches when no exit was stated (M15, #198)', async () => {
+    const honest = { kind: 'test_run', command: 'npm test', claimedExit: null, claimedPassed: 34, claimedFailed: 7, claimedTotal: 41 };
+    const result = await verifyTestClaim(honest, { run: fakeRun({ exit: 1, output: '# pass 33\n# fail 8\n' }) });
+    assert.equal(result.verdict, 'breach');
+    assert.match(result.note, /passed count: claimed 34, replayed 33/);
+  });
+
+  test('no stated exit and unparsable counts is unknown, not confirmed (M15, #198)', async () => {
+    const honest = { kind: 'test_run', command: 'npm test', claimedExit: null, claimedPassed: 34, claimedFailed: 7, claimedTotal: 41 };
+    const result = await verifyTestClaim(honest, { run: fakeRun({ exit: 1, output: 'no summary here\n' }) });
+    assert.equal(result.verdict, 'unknown');
+    assert.match(result.note, /counts_unparsed: no exit stated/);
+  });
 });
 
 describe('createClaimChecker (M15 slice 2)', () => {
@@ -328,6 +360,45 @@ describe('extractBareTestClaim (M15 slice 2)', () => {
       assert.equal(claims[0].inferred, true);
       assert.equal(claims[0].claimedFailed, 0);
       assert.equal(claims[0].claimedPassed, null);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('"all3 tests now pass" (count glued to "all") is still a bare all-pass claim (M15, #198)', () => {
+    // The missing space made the bare-claim detector miss the sentence
+    // entirely, so the all-pass assertion escaped verification.
+    const dir = makeTempDir();
+    try {
+      writeFileSync(join(dir, 'package.json'), JSON.stringify({ scripts: { test: 'node --test' } }));
+      for (const text of ['all3 tests now pass.', 'every3 tests pass.', 'all3 tests are green.']) {
+        const claims = extractBareTestClaim(text, { cwd: dir });
+        assert.equal(claims.length, 1, text);
+        assert.equal(claims[0].command, 'npm test');
+        assert.equal(claims[0].claimedFailed, 0);
+        assert.equal(claims[0].claimedExit, 0);
+        assert.equal(claims[0].inferred, true);
+      }
+      // Prose that merely contains "all" must not become a claim.
+      assert.deepEqual(extractBareTestClaim('We allow 3 tests to pass.', { cwd: dir }), []);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('an all-pass claim over a failing suite still breaches (M15, #198)', async () => {
+    // Claiming all-pass while the replay has failures is a breach — the
+    // #198 fix only stops judging honest partial-failure reports on an
+    // exit nobody stated; it does not let an all-pass claim through.
+    const dir = makeTempDir();
+    try {
+      writeFileSync(join(dir, 'package.json'), JSON.stringify({ scripts: { test: 'node --test' } }));
+      const claims = extractSessionClaims('all3 tests pass.', { cwd: dir });
+      assert.equal(claims.length, 1);
+      assert.equal(claims[0].inferred, true);
+      const result = await verifyTestClaim(claims[0], { run: fakeRun({ exit: 1, output: '# pass 2\n# fail 1\n' }) });
+      assert.equal(result.verdict, 'breach');
+      assert.match(result.note, /exit: claimed 0, replayed 1/);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
