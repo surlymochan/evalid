@@ -348,8 +348,11 @@ export const PAIRING_VIOLATION_KINDS = Object.freeze([
  *   calls stay open: only the sink's `close()` may end them, as `abandoned`.
  * A violation is a fact about the stream, not a reason to stop it: the offending event is still
  * recorded, and the tracker keeps going so one breach cannot hide the next.
+ *
+ * Exported (unchanged semantics) so the live wrapper (M15 slice 1) can run the exact same
+ * state machine incrementally while a session streams, instead of re-implementing it.
  */
-function createPairingTracker() {
+export function createPairingTracker() {
   const open = new Map();
   const closed = new Set();
 

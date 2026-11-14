@@ -64,3 +64,21 @@ the MacBook has no claude CLI at all. A real claude recording needs the
 user to run it in their own terminal (see #187 for the exact commands);
 until then the claude fixtures above stay labelled reconstructed and no
 test claims a claude fixture is a verbatim recording.
+
+`codex-real-live-m15s1.ndjson` (M15 slice 1, #193): **verbatim recording
+from a real codex run wrapped by `xflow live`** — raw stdout, nothing
+edited. Recorded 2026-11-14 on gocc with codex-cli 0.166.0, logged in using
+ChatGPT, in a scratch directory (`/tmp/m15s1-task`, one `sample.txt` file).
+Command: `node run-live.mjs "Run ls in this directory and read sample.txt,
+then report how many files there are and what sample.txt says. Do not
+modify anything." /tmp/m15s1-live/ledger.jsonl` (thin runner around the
+same `runLiveSession` the `xflow live` CLI calls; the full CLI could not
+run on gocc because the tunnel could not fetch its npm dependencies —
+see #193), stdin from /dev/null, codex invoked as `codex exec --json
+--skip-git-repo-check`. Exit 0, 9 lines, 2 shell calls (`ls`, `cat
+sample.txt` via shell), both paired, `turn.completed` present. Live
+summary and post-hoc proof agree field by field (2 started / 2 ended /
+2 paired / 0 violations / verdict paired); stdout passthrough verified
+byte-identical against the saved stream. The live ledger, summary and
+proof script for this run are kept with the goal bookkeeping, not in
+this repo.

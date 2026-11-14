@@ -1,0 +1,9 @@
+{"type":"thread.started","thread_id":"01a1d96b-54cc-7302-9c94-d4acdda9d0fd"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"I’ll list the directory and read `sample.txt` without modifying anything."}}
+{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"/bin/zsh -lc 'ls -la'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"/bin/zsh -lc 'ls -la'","aggregated_output":"total 8\ndrwxr-xr-x    3 surlymo  wheel     96 Nov 14 17:33 .\ndrwxrwxrwt  322 root     wheel  10304 Nov 14 17:36 ..\n-rw-r--r--    1 surlymo  wheel     52 Nov 14 17:33 sample.txt\n","exit_code":0,"status":"completed"}}
+{"type":"item.started","item":{"id":"item_2","type":"command_execution","command":"/bin/zsh -lc 'cat sample.txt'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_2","type":"command_execution","command":"/bin/zsh -lc 'cat sample.txt'","aggregated_output":"sample file for the live-wrap evidence run\nline two\n","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_3","type":"agent_message","text":"There is **1 file**: `sample.txt`.\n\nIt says:\n\n```text\nsample file for the live-wrap evidence run\nline two\n```\n\nNothing was modified."}}
+{"type":"turn.completed","usage":{"input_tokens":53032,"cached_input_tokens":34304,"cache_write_input_tokens":0,"output_tokens":133,"reasoning_output_tokens":0}}
