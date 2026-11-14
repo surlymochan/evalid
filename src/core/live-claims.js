@@ -137,7 +137,9 @@ export function extractSessionClaims(text, options = {}) {
  * means) and no pass count (the agent never stated one).
  */
 const BARE_PASS_PATTERNS = [
-  /\b(all|every)\b[^.\n]{0,60}\btests?\b[^.\n]{0,60}\b(pass(?:ed|es|ing)?|green)\b/i,
+  // "all" may carry its count glued on ("all3 tests now pass" — a missing
+  // space, #198): the digit run is part of the quantifier, not prose.
+  /\b(all|every)\d*\b[^.\n]{0,60}\btests?\b[^.\n]{0,60}\b(pass(?:ed|es|ing)?|green)\b/i,
   /\btests?\s+(pass(?:ed|es|ing)?|are\s+green)\b/i,
 ];
 
@@ -248,17 +250,21 @@ export async function verifyTestClaim(claim, options = {}) {
   }
   const replay = await run(argv, cwd, timeoutMs);
   const counts = parseReplayCounts(replay.output || '', claim.command);
-  const expectedExit = claim.claimedExit ?? 0;
+  // No exit was stated or inferable (a claim that reports failures
+  // leaves claimedExit null, #198): skip the exit comparison and judge
+  // the claim on its counts alone. An explicitly stated exit is still
+  // enforced.
+  const hasExit = claim.claimedExit !== null && claim.claimedExit !== undefined;
   if (replay.timedOut) {
     return { ...base, verdict: 'unknown', note: `replay timed out after ${timeoutMs}ms`, replay };
   }
   if (replay.spawnError) {
     return { ...base, verdict: 'unknown', note: `could not run claimed command: ${replay.spawnError}`, replay };
   }
-  if (replay.exit !== expectedExit) {
+  if (hasExit && replay.exit !== claim.claimedExit) {
     return {
       ...base, verdict: 'breach',
-      note: `exit: claimed ${expectedExit}, replayed ${replay.exit}`,
+      note: `exit: claimed ${claim.claimedExit}, replayed ${replay.exit}`,
       replay: { ...replay, counts },
     };
   }
@@ -282,7 +288,9 @@ export async function verifyTestClaim(claim, options = {}) {
   } else if (claim.claimedPassed !== null || claim.claimedFailed !== null) {
     return {
       ...base, verdict: 'unknown',
-      note: 'counts_unparsed: exit matches, counts could not be parsed from replay output',
+      note: hasExit
+        ? 'counts_unparsed: exit matches, counts could not be parsed from replay output'
+        : 'counts_unparsed: no exit stated, counts could not be parsed from replay output',
       replay: { ...replay, counts },
     };
   }

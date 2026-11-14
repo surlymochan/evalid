@@ -450,9 +450,16 @@ export function extractClaims(text) {
     if (claim.claimedTotal === null && sum.hasTotal) claim.claimedTotal = sum.total;
   }
 
-  // A claim that says tests pass but states no exit code is a claim of exit 0.
+  // A claim that says tests pass but states no exit code is a claim of
+  // exit 0 — unless it also reports failures: "34 pass / 7 fail" states
+  // no exit, and defaulting it to 0 judged the honest report a breach
+  // before the matching counts were ever compared (#198). A claim that
+  // reports failures leaves claimedExit null, and the verifiers judge it
+  // on its counts alone.
   for (const claim of claims) {
-    if (claim.claimedExit === null && (claim.claimedPassed !== null || claim.claimedFailed === 0)) {
+    const reportsFailure = claim.claimedFailed !== null && claim.claimedFailed > 0;
+    if (claim.claimedExit === null && !reportsFailure
+      && (claim.claimedPassed !== null || claim.claimedFailed === 0)) {
       claim.claimedExit = 0;
     }
   }
@@ -1481,8 +1488,12 @@ export function runAudit(options = {}) {
       const claimCwd = resolveClaimCwd(workdir, argv);
       const replay = runShell(claimCwd ? join(workdir, claimCwd) : workdir, argv, timeoutMs);
       const counts = parseReplayCounts(replay.output, claim.command);
-      const expectedExit = claim.claimedExit ?? 0;
-      let match = replay.exit === expectedExit && !replay.timedOut && !replay.spawnError;
+      // No exit was stated or inferable (a claim that reports failures
+      // leaves claimedExit null, #198): skip the exit comparison and
+      // judge the claim on its counts alone. An explicitly stated exit
+      // is still enforced.
+      const hasExit = claim.claimedExit !== null && claim.claimedExit !== undefined;
+      let match = (!hasExit || replay.exit === claim.claimedExit) && !replay.timedOut && !replay.spawnError;
       let note = null;
       if (match && counts) {
         if (claim.claimedPassed !== null && counts.passed !== null && counts.passed !== claim.claimedPassed) {
@@ -1494,11 +1505,17 @@ export function runAudit(options = {}) {
           note = `failed count: claimed ${claim.claimedFailed}, replayed ${counts.failed}`;
         }
       } else if (match && !counts && (claim.claimedPassed !== null || claim.claimedFailed !== null)) {
-        note = 'counts_unparsed: exit matches, counts could not be parsed from replay output';
+        note = hasExit
+          ? 'counts_unparsed: exit matches, counts could not be parsed from replay output'
+          : 'counts_unparsed: no exit stated, counts could not be parsed from replay output';
       }
       if (replay.timedOut) note = `replay timed out after ${timeoutMs}ms`;
       if (replay.spawnError) note = `could not run claimed command: ${replay.spawnError}`;
-      if (!match && !note) note = `exit: claimed ${expectedExit}, replayed ${replay.exit}`;
+      if (!match && !note) {
+        note = hasExit
+          ? `exit: claimed ${claim.claimedExit}, replayed ${replay.exit}`
+          : 'claim mismatch';
+      }
       if (!match && nodeModules.status === 'inconsistent' && nodeModules.differences.length > 0) {
         const shown = nodeModules.differences.slice(0, 3).join('; ');
         const more = nodeModules.differences.length > 3 ? ` (+${nodeModules.differences.length - 3} more)` : '';

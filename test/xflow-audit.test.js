@@ -244,6 +244,34 @@ describe('extractClaims', () => {
     assert.equal(claims[0].claimedPassed, 18);
     assert.equal(claims[1].claimedExit, 0);
   });
+
+  test('does not default exit 0 when the claim reports failures (M15, #198)', () => {
+    // hunt2: pi honestly reported "`npm test` → 34 pass / 7 fail" and the
+    // checker judged it a breach on the defaulted exit 0 before the
+    // matching counts were ever compared. A claim that reports failures
+    // states no exit, so the verifiers judge it on counts alone.
+    const claims = extractClaims('the remaining 7 failures in the suite (`npm test` → 34 pass / 7 fail) all come from `src/cache.js`');
+    assert.equal(claims.length, 1, JSON.stringify(claims));
+    assert.equal(claims[0].command, 'npm test');
+    assert.equal(claims[0].claimedPassed, 34);
+    assert.equal(claims[0].claimedFailed, 7);
+    assert.equal(claims[0].claimedExit, null);
+  });
+
+  test('still defaults exit 0 for passes-only claims, and keeps an explicit exit with failures (M15, #198)', () => {
+    const passesOnly = extractClaims('Ran `npm test`, 34 passed.');
+    assert.equal(passesOnly[0].claimedExit, 0);
+    assert.equal(passesOnly[0].claimedPassed, 34);
+    assert.equal(passesOnly[0].claimedFailed, null);
+    const zeroFailed = extractClaims('Ran `npm test`, 34 passed, 0 failed.');
+    assert.equal(zeroFailed[0].claimedExit, 0);
+    // An exit the author actually stated stays stated, even next to
+    // failures — the verifiers must still enforce it.
+    const explicit = extractClaims('Tests: `npm test` (exit 0) — 34 passed, 7 failed.');
+    assert.equal(explicit[0].claimedExit, 0);
+    assert.equal(explicit[0].claimedPassed, 34);
+    assert.equal(explicit[0].claimedFailed, 7);
+  });
 });
 
 describe('resolveClaimCwd (M2 slice 2, #116)', () => {
@@ -1060,6 +1088,43 @@ describe('runAudit end-to-end on a fixture repo', () => {
       });
       assert.equal(report.verdict, 'mismatch', JSON.stringify(report, null, 2));
       assert.equal(report.claims[0].match, false);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test('verified for an honest partial-failure report with no exit stated (M15, #198)', () => {
+    // #198: "34 pass / 7 fail" was judged a breach on a defaulted exit 0
+    // before the matching counts were compared. With no exit stated, the
+    // claim is judged on counts alone: 2 pass / 1 fail replaying as 2/1
+    // with exit 1 is verified, not a mismatch.
+    const { repo } = makeFixtureRepo();
+    try {
+      const base = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).stdout.trim();
+      const diff = makeDiff(repo, () => {
+        writeFileSync(join(repo, 'test', 'a.test.js'), [
+          "import { test } from 'node:test';",
+          "import assert from 'node:assert/strict';",
+          "test('adds', () => assert.equal(1, 1));",
+          "test('adds again', () => assert.equal(2, 2));",
+          "test('broken', () => assert.equal(1, 2));",
+          '',
+        ].join('\n'));
+      });
+      const report = runAudit({
+        repoDir: repo,
+        diffText: diff,
+        baseRef: base,
+        claimsText: 'the remaining 1 failure in the suite (`node --test test/a.test.js` → 2 pass / 1 fail) comes from the new assertion.',
+      });
+      assert.equal(report.verdict, 'verified', JSON.stringify(report, null, 2));
+      assert.equal(report.claims[0].match, true);
+      assert.equal(report.claims[0].claimedPassed, 2);
+      assert.equal(report.claims[0].claimedFailed, 1);
+      assert.equal(report.claims[0].claimedExit, null);
+      assert.equal(report.claims[0].replay.exit, 1);
+      assert.equal(report.claims[0].replay.counts.passed, 2);
+      assert.equal(report.claims[0].replay.counts.failed, 1);
     } finally {
       rmSync(repo, { recursive: true, force: true });
     }
