@@ -8,6 +8,7 @@
  *   corps                        Run the heavy corps workflow through its governed entry
  *   proof                        Verify workflow completion evidence and write proof
  *   audit                        Audit any git diff / PR: replay claimed test runs, verdict
+ *   live -- <agent cmd...>        Wrap an agent CLI run: live pairing checks + ledger
  *   trend                        Show claimed-vs-replayed trend from the proof ledger
  *   doctor                       Check local xflow readiness
  *   evaluate                     Show one-shot external evaluator brief
@@ -65,6 +66,7 @@ import {
   writeProfile,
 } from '../src/core/policy-overlay.js';
 import { writeWorkflowRecommendation } from '../src/core/intake-recommendation.js';
+import { runLiveSession } from '../src/core/live-session.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -92,6 +94,9 @@ async function main() {
       break;
     case 'audit':
       await handleAudit([subcommand, ...rest].filter(Boolean));
+      break;
+    case 'live':
+      await handleLive([subcommand, ...rest].filter(Boolean));
       break;
     case 'trend':
       await handleTrend([subcommand, ...rest].filter(Boolean));
@@ -7583,6 +7588,59 @@ Options:
 `);
 }
 
+// ─── live (M15 slice 1, #193) ──────────────────────────────────────────────
+
+async function handleLive(args) {
+  const separator = args.indexOf('--');
+  const flags = separator === -1 ? args : args.slice(0, separator);
+  const command = separator === -1 ? [] : args.slice(separator + 1);
+  // Only flags before `--` can ask for help: the agent command after `--`
+  // may legitimately contain the word "help".
+  if (flags.some(isHelpRequest)) {
+    printLiveHelp();
+    return;
+  }
+  if (!command.length) {
+    console.error('Usage: xflow live [--ledger <path>] [--adapter codex|claude|auto] [--json] -- <agent cmd...>');
+    console.error('Missing agent command after -- (example: xflow live -- codex exec --json "list the files").');
+    process.exitCode = 2;
+    return;
+  }
+  const parsedArgs = parseCliArgs(flags);
+  const adapter = parsedArgs.adapter || 'auto';
+  if (!['codex', 'claude', 'auto'].includes(adapter)) {
+    console.error(`Unknown adapter: ${adapter} (expected codex|claude|auto)`);
+    process.exitCode = 2;
+    return;
+  }
+  const result = await runLiveSession({
+    command,
+    adapter,
+    ledgerPath: parsedArgs.ledger || undefined,
+    jsonSummary: parsedArgs.json === true,
+  });
+  if (result.error && result.exitCode === 127) {
+    console.error(`live: failed to start ${command[0]}: ${result.error}`);
+  }
+  process.exitCode = result.exitCode;
+}
+
+function printLiveHelp() {
+  console.log(`
+xflow live — wrap an agent CLI run and verify tool pairing while it runs.
+
+Usage: xflow live [--ledger <path>] [--adapter codex|claude|auto] [--json] -- <agent cmd...>
+
+The agent's stdout is passed through byte-for-byte; its stream-json lines are
+checked live with the M14 pairing invariant (tool_use/tool_result pairing).
+Each normalized event is appended to the live ledger (JSONL: seq, ts, event,
+tool_call_id, pairing verdict) beside the raw stream (stream.ndjson) and a
+summary (summary.json) whose pairing fields match a post-hoc replay of the
+stream through checkPairing. The summary is printed to stderr; the process
+exits with the agent's exit code.
+`);
+}
+
 function printHelp() {
   console.log(`
 xflow — evalid unified workflow CLI
@@ -7593,6 +7651,7 @@ Usage:
   xflow corps --title <title>    Run heavy track through governed entry
   xflow proof --track corps      Verify final execution proof
   xflow audit --pr 75 [--json]   Audit a PR: replay its claimed test runs
+  xflow live -- <agent cmd...>   Wrap an agent CLI run: live pairing checks + ledger
   xflow trend [--repo .] [--since 2026-11-01]
                                  Claimed-vs-replayed trend from the proof ledger
   xflow doctor [--json]          Check local xflow readiness

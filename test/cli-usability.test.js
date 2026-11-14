@@ -4160,6 +4160,7 @@ Repository names were sanitized.
       ['workflow', /Usage: xflow workflow/],
       ['corps', /Usage: xflow corps/],
       ['proof', /Usage: xflow proof/],
+      ['live', /Usage: xflow live/],
       ['atom', /Usage: xflow atom/],
       ['gate', /Usage: xflow gate/],
       ['doctor', /Usage: xflow doctor/],
