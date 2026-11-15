@@ -23,6 +23,16 @@
       "computed_not_billed": false
     },
     {
+      "id": "minimax-m31-flash",
+      "label": "MiniMax M3.1-Flash list price (cost basis for M16)",
+      "model": "MiniMax-M3.1-Flash, Standard tier",
+      "in": 0.15, "out": 0.60, "cache_read": 0.015, "cache_write": 0.0,
+      "source": "https://platform.minimax.io/docs/pricing/overview",
+      "fetched": "2026-11-15",
+      "note": "Closest published pay-as-you-go price for the bench model MiniMax-M3.1-Flash-Preview: the pricing page lists MiniMax-M3.1-Flash (no separate Preview price; Preview is sold via M Plan / MiniMax Code). Computed, not billed — actual usage runs on the Token Plan. The older 'minimax' row (MiniMax-M3 Standard, $0.30/$1.20/$0.06) is retained so earlier medians (e.g. pilot2 baseline $0.1964) stay reproducible.",
+      "computed_not_billed": false
+    },
+    {
       "id": "sonnet5",
       "label": "Claude Sonnet 5 list price (computed)",
       "model": "Claude Sonnet 5",
