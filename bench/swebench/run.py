@@ -27,6 +27,25 @@ ROOT = Path(__file__).resolve().parent
 LOCK = threading.Lock()
 PREDICTION_LOCK = threading.Lock()
 
+# M16 slice 1 (#205): per-cell $/task. Cost is computed at MiniMax list
+# prices (prices.json) from the recorded token counts, so the runs file
+# carries the $/task leg of P1-2 instead of leaving it to report time.
+# Basis: the minimax-m31-flash row — the closest published pay-as-you-go
+# price for the bench model MiniMax-M3.1-Flash-Preview (the pricing page
+# lists M3.1-Flash; Preview itself is sold via M Plan / MiniMax Code with
+# no PAYG price of its own). Computed, not billed: actual usage runs on
+# the Token Plan.
+PRICE_ROWS = json.loads((ROOT / "prices.json").read_text())["rows"]
+COST_ROW_ID = "minimax-m31-flash"
+COST_ROW = next(r for r in PRICE_ROWS if r["id"] == COST_ROW_ID)
+
+
+def cost_usd(tok, row=COST_ROW):
+    """USD cost of one cell at a prices.json row (USD per 1M tokens)."""
+    return round((tok["input"] * row["in"] + tok["output"] * row["out"]
+                  + tok["cache_read"] * row["cache_read"]
+                  + tok["cache_write"] * row["cache_write"]) / 1e6, 6)
+
 
 def instances():
     return json.loads((ROOT / "instances.json").read_text())["instances"]
@@ -90,6 +109,10 @@ def cell(inst, arm, rep, out, stamp, raw_root, label, predictions_dir, predictio
         rec["model"] = sorted(models)
         tot = {k: sum((c.get("usage") or {}).get(k, 0) for c in calls) for k in ("input", "output", "cache_read", "cache_write")}
         rec["tokens"] = tot
+        # M16 slice 1 (#205): $/task leg of P1-2 — record the cost with the
+        # cell, priced at COST_ROW_ID (see prices.json for the source).
+        rec["cost_usd"] = cost_usd(tot)
+        rec["cost_price_row"] = COST_ROW_ID
         rec["timed_out"] = any((c.get("record") or {}).get("timed_out") or c.get("rc") in (124, 137) for c in calls) or rec["wall_s"] >= A.CAP_S
         rec["errors"] = [e for c in calls for e in (c.get("usage") or {}).get("errors", [])][:5]
         g = E.grade(inst, repo, venv, events / "grade")

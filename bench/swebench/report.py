@@ -85,7 +85,7 @@ def main():
     ap.add_argument("path")
     ap.add_argument("--out")
     ap.add_argument("--raw")
-    ap.add_argument("--price", default="minimax")
+    ap.add_argument("--price", default="minimax-m31-flash")
     ap.add_argument("--model-label", default="")
     ap.add_argument("--only-instances", default="")
     ap.add_argument("--exclude")
@@ -132,6 +132,14 @@ def main():
         s = {"n": n, "resolved": res, "resolved_rate": res / n if n else None,
              "instances": len({r["instance_id"] for r in rs}),
              "wall_s_q1_med_q3": quantiles(walls), "timed_out": sum(1 for r in rs if r.get("timed_out")),
+             # M16 slice 1 (#205): the 1200s cap truncates ~93% of cells, so
+             # the median over ALL cells is a cap artifact (~1203s in every
+             # arm). The wall leg is reported over uncensored cells only
+             # (exited before the cap), always with n; the <=1.3x median
+             # ratio test applies only when the median is computable
+             # (truncation <50% in both arms), else the leg is 无法判定.
+             "wall_s_uncensored_n": len([r for r in rs if not r.get("timed_out")]),
+             "wall_s_uncensored_q1_med_q3": quantiles([r["wall_s"] for r in rs if not r.get("timed_out")]),
              "tokens_in_out_median": statistics.median(io),
              "tokens_in_out_q1_med_q3": quantiles(io),
              "tokens_total_incl_cache_median": statistics.median(tot),
@@ -144,7 +152,11 @@ def main():
         s["runs_with_rate_limit_retries"] = sum(1 for x in rl if x["retries"])
         s["runs_ended_in_error"] = sum(1 for x in rl if x["ended_in_error"])
         for row in prices:
-            cs = [cost(r["tokens"], row) for r in rs]
+            # M16 slice 1 (#205): prefer the cost recorded at run time when
+            # it matches this row; older rows without the field fall back to
+            # recomputation from tokens (identical formula).
+            cs = [r["cost_usd"] if r.get("cost_price_row") == row["id"] and "cost_usd" in r
+                  else cost(r["tokens"], row) for r in rs]
             s["cost"][row["id"]] = {"median_per_run": statistics.median(cs), "total": sum(cs),
                                     "q1_med_q3": quantiles(cs),
                                     "per_resolved": (sum(cs) / res) if res else None}
@@ -177,6 +189,11 @@ def main():
     for iid in sorted(per_inst):
         L.append(f"| `{iid}` | " + " | ".join("{}/{}".format(*per_inst[iid].get(a, [0, 0])) for a in arms) + " |")
     L += ["", f"Timed out (20 min cap): " + ", ".join(f"{a} {summary['arms'][a]['timed_out']}" for a in arms),
+          "Wall-clock, uncensored cells only (exited before the 1200s cap; median over all cells is a cap artifact): " + "; ".join(
+              (f"{a} median {summary['arms'][a]['wall_s_uncensored_q1_med_q3'][1]:.0f}s "
+               f"(n={summary['arms'][a]['wall_s_uncensored_n']})")
+              if summary['arms'][a]['wall_s_uncensored_q1_med_q3'][1] is not None
+              else f"{a} no uncensored cells" for a in arms),
           f"Guard blocks: " + ", ".join(f"{a} {summary['arms'][a]['guard_blocked']}" for a in arms),
           "Rate-limit (429) retries inside Pi: " + "; ".join(
               f"{a} {summary['arms'][a]['rate_limit_retries_total']} in "
