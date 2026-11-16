@@ -21,6 +21,12 @@ OPENFLOW_TGZ = E.ROOT / "deps" / "surlymochan-openflow-0.2.1.tgz"
 OPENSWARM_DIR = Path(os.environ.get("OPENSWARM_DIR", "<openswarm>"))
 NODE22_BIN = "<node22>/bin"
 CAP_S = 20 * 60
+
+# Planner budget in seconds (default 600, override with EVALID_PLANNER_TIMEOUT_S):
+# 600s keeps planner + executor inside the CAP_S 1200s cell budget (executor
+# budget is derived from the remaining time, see arm_openswarm). Raising it
+# trades executor time 1:1, so only raise it deliberately, never to the full cap.
+PLANNER_TIMEOUT_S = int(os.environ.get("EVALID_PLANNER_TIMEOUT_S", "600"))
 GIT = E.GIT
 
 # Dead-end proxy (port 9 = discard) plus offline installer flags: the agent's shell gets no
@@ -265,7 +271,7 @@ def arm_openswarm(inst, repo, venv, events, tid):
     t0 = time.time()
     plan = PLANNER.format(task_file=task_file, verify_file=verify_file, python=f"{venv}/bin/python", repo=repo,
                           skill=(OPENSWARM_DIR / "SKILL.md").read_text(), task=base_prompt(inst, repo, venv))
-    # Planner budget 600s (was 300s): the 300s cap was calibrated on DeepSeek,
+    # Planner budget PLANNER_TIMEOUT_S (default 600s, was 300s): the 300s cap was calibrated on DeepSeek,
     # whose planner finished in 87-244s on these 6 instances. With MiniMax
     # M3.1-Flash-Preview at high thinking the planner exceeds 300s on all 6
     # pilot2 cells — killed mid-work (rc 143) before writing the task file,
@@ -276,7 +282,8 @@ def arm_openswarm(inst, repo, venv, events, tid):
     # reproduction, no filesystem search): the 600s validation cell showed
     # the planner spending 13 turns / 23 tools exploring instead of
     # converging to the task file, so the budget alone cannot fix it.
-    calls = [run_pi(tid + "-plan", rundir, plan, events, 600, path_env(venv), label="planner")]
+    # Override via EVALID_PLANNER_TIMEOUT_S; default stays 600s (M16 slice 2, #211).
+    calls = [run_pi(tid + "-plan", rundir, plan, events, PLANNER_TIMEOUT_S, path_env(venv), label="planner")]
     if task_file.exists():
         shutil.copy(task_file, events / "executor-task.md")
     if verify_file.exists():
