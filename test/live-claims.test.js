@@ -449,6 +449,75 @@ describe('extractBareTestClaim (M15 slice 2)', () => {
   });
 });
 
+describe('diagnostic context is not a claim (M15 slice 3, #201)', () => {
+  // The recorded session 7 of the M15 evidence set: pi investigated a
+  // failing test and diagnosed a missing runner. The sentence names the
+  // runner but asserts nothing — the extractor used to take it as a
+  // `pytest` test-run claim, and because a stale ~/.local/bin/pytest
+  // symlink still existed the replay exited 0 and the checker reported
+  // "confirmed": a statement the agent never made, vouched for.
+  const SESSION_7_DIAGNOSTIC = 'test/env-python.test.js failed … spawnSync("pytest", …) got ENOENT';
+
+  test('a failed-spawn diagnosis is not harvested as a test-run claim', () => {
+    assert.deepEqual(extractSessionClaims(SESSION_7_DIAGNOSTIC), []);
+  });
+
+  test('the genuine command in the same message survives', () => {
+    const claims = extractSessionClaims(`${SESSION_7_DIAGNOSTIC}\nRunning \`python3 -m pytest\` instead.`);
+    assert.deepEqual(claims.map((claim) => claim.command), ['python3 -m pytest']);
+  });
+
+  test('the diagnosis never reaches a verdict, so it cannot be confirmed', async () => {
+    const checker = createClaimChecker({ run: fakeRun({ exit: 0, output: '' }) });
+    checker.checkText(SESSION_7_DIAGNOSTIC);
+    await checker.drain(5000);
+    const summary = checker.summary();
+    assert.equal(summary.checked, 0);
+    assert.equal(summary.confirmed, 0);
+  });
+
+  test('a diagnostic mention does not retract an assertion elsewhere', async () => {
+    const checker = createClaimChecker({ run: fakeRun({ exit: 0, output: '# pass 5\n# fail 0\n' }) });
+    checker.checkText('spawnSync("pytest", …) got ENOENT. Ran `pytest`, 5 passed.');
+    await checker.drain(5000);
+    const summary = checker.summary();
+    assert.equal(summary.checked, 1);
+    assert.equal(summary.confirmed, 1);
+    assert.equal(summary.checks[0].command, 'pytest');
+    assert.match(summary.checks[0].source, /Ran `pytest`/);
+  });
+
+  test('the other command-not-found wordings are diagnostic too', () => {
+    for (const sentence of [
+      'pytest: command not found',
+      'sh: 1: pytest: not found',
+      'spawnSync("pytest") failed: ENOENT',
+      'pytest is not installed on this machine',
+    ]) {
+      assert.deepEqual(extractSessionClaims(sentence), [], sentence);
+    }
+  });
+
+  test('an ordinary sentence that names a runner is still a claim', () => {
+    const claims = extractSessionClaims('Ran `npm test`, 18 passed, 0 failed.');
+    assert.deepEqual(claims.map((claim) => claim.command), ['npm test']);
+    assert.equal(claims[0].claimedPassed, 18);
+  });
+
+  test('an all-pass sentence inside a diagnostic line is not a bare claim', () => {
+    const dir = makeTempDir();
+    try {
+      writeFileSync(join(dir, 'package.json'), JSON.stringify({ scripts: { test: 'node --test' } }));
+      assert.deepEqual(
+        extractBareTestClaim('spawnSync("npm test") got ENOENT — all tests pass.', { cwd: dir }),
+        [],
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('pi adapter (M15 slice 2)', () => {
   const piReal = readFileSync(join(REPO_ROOT, 'test', 'fixtures', 'agent-stream', 'pi-real-list-files.ndjson'), 'utf8');
 

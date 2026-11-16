@@ -38,6 +38,17 @@
  * Checks run sequentially (one replay at a time) behind a queue so the
  * live session is never hammered while the agent works. The same
  * command/path claimed twice in one session is verified once.
+ *
+ * M15 slice 3 (#201) tightens the extractor: a sentence that reports a
+ * command *failing to run* is diagnostic context, not a claim. The
+ * recorded session 7 of the M15 evidence set says
+ * `test/env-python.test.js failed … spawnSync("pytest", …) got ENOENT` —
+ * a diagnosis of a missing runner. The extractor took `pytest` out of
+ * it as a test-run claim, and because a stale `~/.local/bin/pytest`
+ * symlink still existed the replay exited 0 and the checker reported
+ * "confirmed": a statement the agent never made, vouched for. Such a
+ * sentence is now dropped from the claim set; a command some other,
+ * ordinary sentence also asserts is still claimed.
  */
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -119,9 +130,94 @@ export function extractFileClaims(text) {
   return claims;
 }
 
+/**
+ * Failure signals that mark a sentence as diagnostic context: the agent
+ * is reporting that a command *failed to run*, not asserting that it ran
+ * green (M15 slice 3, #201).
+ *
+ * The list is deliberately narrow. It names the error codes a failed
+ * spawn produces, the spawn/exec APIs themselves (a clause that quotes
+ * one is reporting a call, not asserting a run), and the shell's own
+ * "not found" wording. A sentence that merely mentions a runner — even
+ * one that later admits the runner is missing — is still a claim.
+ */
+const DIAGNOSTIC_SIGNALS = [
+  /\bENOENT\b/,
+  /\bEACCES\b/,
+  /\bEPERM\b/,
+  /\bspawnSync\b/,
+  /\bspawn\s*\(/,
+  /\bexecSync\b/,
+  /\bexecFile(?:Sync)?\b/,
+  /\bchild_process\b/,
+  /command not found/i,
+  /not recognized as an internal or external command/i,
+  /no such file or directory/i,
+  /failed to spawn/i,
+  /:\s*not found\b/i,
+  /\bis not installed\b/i,
+];
+
+/** True when the sentence reports a failed command run, not a run. */
+export function isDiagnosticContext(text) {
+  const sentence = String(text || '');
+  return DIAGNOSTIC_SIGNALS.some((pattern) => pattern.test(sentence));
+}
+
+/**
+ * The audit's own clause split (audit.js `extractClaims`): a line is cut
+ * at sentence boundaries and at a trailing semicolon. Mirrored here so
+ * the live path can ask, per clause, the same question the audit asks
+ * per clause when it harvests commands.
+ */
+function splitClauses(text) {
+  const clauses = [];
+  for (const line of String(text || '').split('\n')) {
+    for (const clause of line.split(/(?:[.;]\s+|\s+;\s*)/)) {
+      if (clause.trim()) clauses.push(clause);
+    }
+  }
+  return clauses;
+}
+
+/**
+ * The commands some *non-diagnostic* clause asserts, mapped to the
+ * clause that asserts them. A command that only shows up inside
+ * diagnostic clauses (a failed spawn report) is not a claim at all; a
+ * command an ordinary sentence also asserts still is — a diagnostic
+ * mention elsewhere does not retract the assertion.
+ *
+ * The command set is harvested with the audit's own extractor, one
+ * clause at a time, so it is exactly the set the audit would harvest
+ * from those clauses.
+ */
+function assertedCommands(text) {
+  const commands = new Map();
+  for (const clause of splitClauses(text)) {
+    if (isDiagnosticContext(clause)) continue;
+    for (const claim of extractClaims(clause)) {
+      if (commands.has(claim.command)) continue;
+      commands.set(claim.command, claim.source);
+    }
+  }
+  return commands;
+}
+
 /** Both claim kinds found in one message. */
 export function extractSessionClaims(text, options = {}) {
-  const test = extractClaims(text).map((claim) => ({ kind: 'test_run', ...claim }));
+  const asserted = assertedCommands(text);
+  const test = extractClaims(text)
+    .filter((claim) => asserted.has(claim.command))
+    .map((claim) => {
+      // The audit keeps the first mention of a command as the claim's
+      // source. When that first mention was the diagnostic one, point
+      // the source at the sentence that actually asserts the run.
+      const source = asserted.get(claim.command);
+      if (!source || !isDiagnosticContext(claim.source)) {
+        return { kind: 'test_run', ...claim };
+      }
+      return { kind: 'test_run', ...claim, source };
+    });
   const files = extractFileClaims(text);
   const bare = test.length === 0 ? extractBareTestClaim(text, options) : [];
   return [...test, ...bare, ...files];
@@ -156,7 +252,8 @@ export function defaultTestCommand(cwd) {
 
 export function extractBareTestClaim(text, options = {}) {
   const sentence = String(text || '').split('\n')
-    .find((line) => BARE_PASS_PATTERNS.some((pattern) => pattern.test(line)));
+    .find((line) => !isDiagnosticContext(line)
+      && BARE_PASS_PATTERNS.some((pattern) => pattern.test(line)));
   if (!sentence) return [];
   const command = defaultTestCommand(options.cwd);
   if (!command) return [];
