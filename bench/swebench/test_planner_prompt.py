@@ -13,7 +13,6 @@ the source with ast instead of importing the module. That keeps it runnable
 by the CI node suite, which shells out here with plain python3.
 """
 import ast
-import re
 import unittest
 from pathlib import Path
 
@@ -76,11 +75,13 @@ class PlannerPromptTests(unittest.TestCase):
         self.assertIn("Do not commit", PLANNER)
 
     def test_planner_timeout_stays_600s(self):
+        text = ARMS.read_text()
+        self.assertIn('"EVALID_PLANNER_TIMEOUT_S", "600"', text,
+                      "planner timeout default must stay 600s (PR #41); "
+                      "override only via EVALID_PLANNER_TIMEOUT_S")
         source = _arm_openswarm_source()
-        match = re.search(r"run_pi\(\s*tid\s*\+\s*\"-plan\".*?,\s*(\d+)\s*,", source, re.DOTALL)
-        self.assertIsNotNone(match, "planner run_pi call not found in arm_openswarm")
-        self.assertEqual(match.group(1), "600",
-                         "planner timeout must stay 600s (PR #41); only the prompt changes")
+        self.assertRegex(source, r"run_pi\(\s*tid\s*\+\s*\"-plan\".*?,\s*PLANNER_TIMEOUT_S\s*,",
+                         "planner run_pi call must pass PLANNER_TIMEOUT_S")
 
 
 if __name__ == "__main__":
