@@ -3,6 +3,16 @@
 All notable changes to this project are documented here. Detailed notes live in
 [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
+## [0.5.36] - 2026-11-16
+
+### Fixed
+- **Diagnostic sentences are not test-run claims (PR #207, merged 2026-11-16T08:40:26Z, squash b504fd4; fixes issue #201)**: the live-claims extractor now drops sentences reporting a command *failing to run* (failed spawn / ENOENT / command not found) from the claim set — they are diagnostic context, not assertions the agent made. Evidence: `node test/live-claims.test.js` 36 pass, 0 fail (7 new diagnostic-context tests); merged-main CI run 43833145541 success. Recovery note: the dispatch run was killed mid-flight by a VM runtime restart; the executor's uncommitted work survived in the run worktree and was verified, committed, and pushed by the operator — ledger gap disclosed in swrm #244.
+- **pi_shim.sh executable so the openswarm arm can run (PR #209, merged 2026-11-16T14:18:45Z, squash 28d6416; fixes issue #208)**: `bench/swebench/harness/pi_shim.sh` mode 100644 → 100755, content unchanged, plus a new regression test asserting the exec bit, the committed mode, the shebang, and the `OPENSWARM_PI_BIN` wiring. The shim was non-executable, so every openswarm cell in the M16 MiniMax pilot died in ~1s with status `unroutable` ("no working pi binary") — 0/6, an infrastructure failure, not a model signal. Evidence, independently re-run by the main round on PR head 84b4a88: new test 4/4 pass; related suites + live-claims 43/43 pass; negative control (mode reverted) fails with EACCES; merged-main CI run 43884400880 success.
+
+Honest note, stated plainly: milestone M16 is **not** accepted in this release — the pilot ran 24/24 complete (baseline 1/6, superpowers 4/6, openflow 1/6, openswarm 0/6), and the openswarm 0/6 was the infrastructure failure fixed by PR #209; the openswarm re-run is pending. No bench numbers are claimed in this release.
+
+Acceptance ledger, stated plainly: the issue #5 ledger is settled as a conclusion on the MiniMax full-matrix recheck (135/135 complete, 2026-11-10) — P2-1 passed, P1-2 / P1-3 / P2-3 did not pass — so no bench numbers are claimed in this release.
+
 ## [0.5.35] - 2026-11-15
 
 ### Added
