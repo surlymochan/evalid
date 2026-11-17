@@ -261,6 +261,22 @@ Write both files, then stop — no further work is needed from you.
 """
 
 
+def shim_timeout_s(budget_min: int) -> int:
+    """Seconds run_pi may spend inside one openswarm attempt.
+
+    Must stay strictly below the openswarm budget (budget_min * 60s):
+    openswarm kills the backend shim when the budget expires, so a
+    SHIM_TIMEOUT of budget or more means the shim dies inside run_pi and
+    never writes executor-*-record.json / executor-*-events.jsonl
+    (M16 slice 2, #213: 840s budget vs 870s SHIM_TIMEOUT lost the whole
+    executor events file for sympy__sympy-13878 r1). The 60s margin covers
+    run_pi's own timeout path (SIGTERM + up to 10s grace, then the record
+    print) plus the shim copying and catting the events file. The 30s floor
+    keeps tiny budgets usable instead of collapsing to 0.
+    """
+    return max(30, budget_min * 60 - 60)
+
+
 def arm_openswarm(inst, repo, venv, events, tid):
     rundir = repo.parent
     pdir = rundir / "planner"
@@ -298,8 +314,11 @@ def arm_openswarm(inst, repo, venv, events, tid):
     home = events / "openswarm-home"
     home.mkdir(exist_ok=True)
     shim = Path(__file__).resolve().parent / "pi_shim.sh"
+    # SHIM_TIMEOUT must stay below the openswarm budget (see shim_timeout_s):
+    # a timeout of budget or more lets openswarm kill the shim before run_pi
+    # returns, losing the executor events file (#213).
     env = dict(os.environ, **path_env(venv), OPENSWARM_HOME=str(home), OPENSWARM_PI_BIN=str(shim),
-               SHIM_TASK_ID=tid + "-exec", SHIM_EVENTS=str(events), SHIM_TIMEOUT=str(budget_min * 60 + 30))
+               SHIM_TASK_ID=tid + "-exec", SHIM_EVENTS=str(events), SHIM_TIMEOUT=str(shim_timeout_s(budget_min)))
     # Keep DEEPSEEK_API_KEY: openswarm is forced to --backend pi, so the Pi wrapper run_pi.sh it calls through the shim needs it and cannot route to its own deepseek backend.
     for k in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY"):
         env.pop(k, None)
