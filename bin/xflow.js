@@ -9,6 +9,7 @@
  *   proof                        Verify workflow completion evidence and write proof
  *   audit                        Audit any git diff / PR: replay claimed test runs, verdict
  *   live -- <agent cmd...>        Wrap an agent CLI run: live pairing checks + ledger
+ *   langsmith verify             Judge a LangSmith project's traces locally, write feedback back
  *   trend                        Show claimed-vs-replayed trend from the proof ledger
  *   doctor                       Check local xflow readiness
  *   evaluate                     Show one-shot external evaluator brief
@@ -67,6 +68,12 @@ import {
 } from '../src/core/policy-overlay.js';
 import { writeWorkflowRecommendation } from '../src/core/intake-recommendation.js';
 import { runLiveSession } from '../src/core/live-session.js';
+import {
+  LANGSMITH_DEFAULT_LIMIT,
+  LangSmithConfigError,
+  renderLangSmithReport,
+  runLangSmithVerify,
+} from '../src/core/langsmith-bridge.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -97,6 +104,9 @@ async function main() {
       break;
     case 'live':
       await handleLive([subcommand, ...rest].filter(Boolean));
+      break;
+    case 'langsmith':
+      await handleLangsmith(subcommand, rest);
       break;
     case 'trend':
       await handleTrend([subcommand, ...rest].filter(Boolean));
@@ -7590,6 +7600,111 @@ Options:
 
 // ─── live (M15 slice 1, #193) ──────────────────────────────────────────────
 
+async function handleLangsmith(sub, args) {
+  if (!sub || isHelpRequest(sub) || args.some(isHelpRequest)) {
+    printLangsmithHelp();
+    return;
+  }
+  if (sub !== 'verify') {
+    console.error(`xflow langsmith: unknown subcommand: ${sub}`);
+    printLangsmithHelp();
+    process.exit(2);
+  }
+  const parsed = parseCliArgs(args);
+  const project = parsed.project !== undefined && parsed.project !== true
+    ? String(parsed.project)
+    : (process.env.LANGSMITH_PROJECT || null);
+  if (!project) {
+    console.error('xflow langsmith verify: no project: pass --project <name> or set LANGSMITH_PROJECT');
+    process.exit(2);
+  }
+  let limit = LANGSMITH_DEFAULT_LIMIT;
+  if (parsed.limit !== undefined) {
+    limit = Number(parsed.limit);
+    if (!Number.isInteger(limit) || limit < 1) {
+      console.error(`xflow langsmith verify: --limit must be a positive integer (got ${parsed.limit})`);
+      process.exit(2);
+    }
+  }
+  let startTime;
+  if (parsed.since !== undefined) {
+    startTime = new Date(String(parsed.since));
+    if (Number.isNaN(startTime.getTime())) {
+      console.error(`xflow langsmith verify: --since is not a valid date: ${parsed.since}`);
+      process.exit(2);
+    }
+  }
+  const cwd = resolve(parsed.cwd !== undefined && parsed.cwd !== true ? String(parsed.cwd) : process.cwd());
+  let result;
+  try {
+    result = await runLangSmithVerify({
+      project,
+      limit,
+      startTime,
+      dryRun: Boolean(parsed.dry_run),
+      cwd,
+    });
+  } catch (error) {
+    if (error instanceof LangSmithConfigError) {
+      console.error(`xflow langsmith verify: ${error.message}`);
+      process.exit(2);
+    }
+    throw error;
+  }
+  const outPath = parsed.out !== undefined && parsed.out !== true ? resolve(String(parsed.out)) : null;
+  if (outPath) writeFileSync(outPath, `${JSON.stringify(result, null, 2)}\n`);
+  if (parsed.json) console.log(JSON.stringify(result, null, 2));
+  else console.log(renderLangSmithReport(result));
+  if (result.writeFailures > 0) {
+    // The verdicts must survive a LangSmith outage: keep the local
+    // results file even when the caller did not ask for one.
+    const keptPath = outPath || resolve(cwd, 'evalid-langsmith-results.json');
+    if (!outPath) writeFileSync(keptPath, `${JSON.stringify(result, null, 2)}\n`);
+    console.error(
+      `xflow langsmith verify: ${result.writeFailures} feedback write(s) failed; `
+      + `local results kept at ${keptPath}`,
+    );
+    process.exit(1);
+  }
+  if (result.traces.length === 0) process.exit(3);
+}
+
+function printLangsmithHelp() {
+  console.log(`
+xflow langsmith — evalid as LangSmith's external deterministic judge
+
+Usage:
+  xflow langsmith verify --project <name> [options]
+
+Pulls a LangSmith project's recent coding-agent traces, verifies the
+agent's claims locally with the existing claim pipeline (test runs are
+replayed in --cwd, file claims checked there), and writes the verdict
+back to each trace's root run as feedback:
+
+  key     evalid_claim_verified
+  score   confirmed / checked claims (traces with no claims are skipped)
+  comment per-claim verdicts with evidence pointers
+
+Options:
+  --project <name>   LangSmith project (or env LANGSMITH_PROJECT)
+  --limit <n>        Root traces to judge (default ${LANGSMITH_DEFAULT_LIMIT})
+  --since <date>     Only traces started on/after this ISO date
+  --cwd <dir>        Workspace claims are verified against (default: cwd)
+  --dry-run          Fetch + verify + print what would be written; write nothing
+  --out <file>       Also write the full local results JSON here
+  --json             Print the full local results JSON
+
+Environment:
+  LANGSMITH_API_KEY  Required. Missing key is a hard error — no results
+                     are ever fabricated without one.
+  LANGSMITH_ENDPOINT Optional API endpoint override.
+  LANGSMITH_PROJECT  Optional default project.
+
+Exit codes: 0 ok · 1 feedback write failed (local results kept) ·
+2 usage/config error · 3 no runs found in the project
+`);
+}
+
 async function handleLive(args) {
   const separator = args.indexOf('--');
   const flags = separator === -1 ? args : args.slice(0, separator);
@@ -7666,6 +7781,8 @@ Usage:
   xflow proof --track corps      Verify final execution proof
   xflow audit --pr 75 [--json]   Audit a PR: replay its claimed test runs
   xflow live -- <agent cmd...>   Wrap an agent CLI run: live pairing + claim checks, ledger, --enforce to kill on breach
+  xflow langsmith verify --project <name> [--dry-run] [--json]
+                                 Judge a LangSmith project's traces locally, write evalid_claim_verified feedback back
   xflow trend [--repo .] [--since 2026-11-01]
                                  Claimed-vs-replayed trend from the proof ledger
   xflow doctor [--json]          Check local xflow readiness
