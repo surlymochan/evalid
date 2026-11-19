@@ -254,7 +254,9 @@ sides, plus a wrong expectation hidden in a dead callback) is in
 ## Commands
 
 The installed binary is `xflow` (`npm install -g evalid` installs the `xflow` CLI). Every
-top-level command below was verified against `xflow <command> --help` at v0.5.7; run
+top-level command below was verified against `xflow <command> --help` at v0.5.7, except
+`xflow langsmith verify`, which landed with the LangSmith bridge after v0.5.36 (see the
+LangSmith section below); run
 `xflow --help` for the full list with examples, or `xflow <command> --help` for one command.
 
 | Command | What it does |
@@ -263,6 +265,7 @@ top-level command below was verified against `xflow <command> --help` at v0.5.7;
 | `xflow corps` | Run the heavy product/multi-agent workflow through its governed entry point |
 | `xflow proof` | Verify workflow completion evidence and write the proof file |
 | `xflow audit` | Audit any git diff / PR: replay claimed test runs, verdict |
+| `xflow langsmith verify --project <name>` | Judge a LangSmith project's traces locally, write `evalid_claim_verified` feedback back (see the LangSmith section below) |
 | `xflow trend` | Claimed-vs-replayed trend from the proof ledger, grouped by repo and agent/model |
 | `xflow doctor` | Check local xflow readiness: package scripts, workflow YAMLs, skill topology |
 | `xflow init` | Create project-local `.as-xflow/config.json` with portable defaults |
@@ -292,6 +295,113 @@ top-level command below was verified against `xflow <command> --help` at v0.5.7;
 | `xflow gate ack <phase>` | Approve a pending human gate so a run can resume |
 | `xflow atom list \| show \| run` | List, inspect, or run a single registered atom directly |
 | `xflow serve` | Start the HTTP control plane for heavy-track workflows |
+
+## LangSmith: evalid as an external deterministic judge
+
+LangSmith is the scoreboard; evalid is the judge. LangSmith's own
+evaluators score runs after the fact, mostly with an LLM judge, and can
+only see what the run itself reported. `xflow langsmith verify` takes
+the opposite direction: it pulls a LangSmith project's recent
+coding-agent traces, verifies the agent's claims locally against
+ground truth — test runs replayed in your workspace, file claims
+checked on disk — and writes the verdict back to each trace's root
+run as LangSmith feedback. No judging moves into LangSmith's sandbox,
+no LLM judge is involved anywhere in the chain, and the verdicts are
+the same deterministic ones the rest of evalid produces.
+
+One trace is one verification session. Only the agent's own words are
+harvested as claim sources; tool and retriever outputs are
+environment data, never claims, and ride along as evidence only.
+
+### Setup
+
+The official `langsmith` JS SDK ships as an evalid dependency — no
+separate install.
+
+```bash
+export LANGSMITH_API_KEY=...   # required; a free Developer-tier key is enough to try it
+export LANGSMITH_PROJECT=my-agent-traces   # optional default project
+# LANGSMITH_ENDPOINT is an optional API endpoint override.
+```
+
+Traces have to be in LangSmith first: turn tracing on for the agent
+session (LangChain/LangGraph trace automatically; other agents need
+`@traceable` / `RunTree` wrapping — see the LangSmith docs).
+
+### One command, end to end
+
+```bash
+xflow langsmith verify --project my-agent-traces
+xflow langsmith verify --project my-agent-traces --dry-run   # fetch + verify, print what would be written, write nothing
+xflow langsmith verify --project my-agent-traces --limit 20 --since 2026-11-18 --out results.json
+```
+
+| Flag | Meaning |
+| --- | --- |
+| `--project <name>` | LangSmith project (or `LANGSMITH_PROJECT`) |
+| `--limit <n>` | Root traces to judge, newest first (default 20) |
+| `--since <date>` | Only traces started on/after this ISO date |
+| `--cwd <dir>` | Workspace claims are verified against (default: current directory) |
+| `--dry-run` | Verify and report the exact would-write payloads; write nothing |
+| `--out <file>` | Also write the full local results JSON here |
+| `--json` | Print the full local results JSON |
+
+Exit codes: `0` ok · `1` a feedback write failed (local results are
+kept) · `2` usage/config error · `3` no runs found in the project.
+
+### Feedback format
+
+One feedback per trace that contains claims, written on the trace's
+**root run** with `feedbackSourceType: 'api'`:
+
+- **key:** `evalid_claim_verified`
+- **score:** confirmed / checked claims, to 4 decimal places. `unknown`
+  counts as not verified. A trace with no claims gets no feedback.
+- **comment:** a score line, then one line per claim with its verdict,
+  the pipeline's evidence note, and the claim's source text:
+
+```text
+evalid claim verification — deterministic replay, zero-judge.
+trace trace-a · root run run-a-root
+claims: 4 checked — 2 confirmed, 2 breach, 0 unknown (score = confirmed/checked = 0.5)
+- [confirmed] test_run `node --test pass.test.mjs` — source: "Ran `node --test pass.test.mjs`, 1 passed, 0 failed"
+- [breach] test_run `node --test fail.test.mjs` — exit: claimed 0, replayed 1 — source: "Ran `node --test fail.test.mjs`, 1 passed, 0 failed"
+```
+
+### When things go wrong (graceful degradation)
+
+- **No API key** — a hard, named error, exit 2. Nothing is ever
+  fabricated without a key.
+- **No network / feedback write fails** — exit 1, and the full local
+  results are kept (`evalid-langsmith-results.json` in the working
+  directory, or the `--out` file) so the verdicts survive the outage.
+- **Empty project** — exit 3, no traces, no feedback.
+- **A trace with no claims** — skipped, no feedback written.
+- **A trace recorded against a different workspace** — its claims come
+  back `unknown`, never invented; verification only ever runs against
+  the `--cwd` you pass.
+- **A trace whose child runs fail to fetch** — the trace degrades to
+  its root run alone, with the failure recorded in the results.
+
+### Runnable example (no key, no network)
+
+```bash
+node examples/langsmith-verify/run.mjs
+```
+
+Recorded traces plus an in-memory fake LangSmith client, with the
+claims really replayed in `examples/langsmith-verify/workspace/`:
+trace A yields 4 claims (2 confirmed, 2 breach, score 0.5) and one
+feedback recorded on its root run; trace B is skipped (no claims).
+Details and the observed output are in
+`examples/langsmith-verify/README.md`; the script is also run in CI
+by `test/langsmith-example.test.js`.
+
+> Live end-to-end against a real LangSmith project — feedback read
+> back through the API — is the remaining M17 acceptance step (epic
+> #215) and needs a `LANGSMITH_API_KEY`. Until then the bridge is
+> verified on recorded-shape fixtures only; this section claims
+> nothing beyond that.
 
 ## Run a change
 
