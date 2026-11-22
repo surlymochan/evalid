@@ -198,6 +198,20 @@ describe('yolo.yaml lite wiring (M4 slice 1)', () => {
     assert.ok(greenIds.includes('I6a.tdd.run'), 'lite keeps TDD run');
     assert.ok(greenIds.includes('I6b.tdd.proof_validate'), 'lite keeps proof seal');
     assert.ok(greenIds.includes('I6d.tdd.assertion_execution'), 'lite keeps assertion-execution gate');
+
+    // M18 slice 2 (#224, lever B): transition-only ceremony phases also
+    // skip on lite — brainstorm is a status transition plus a human-gate
+    // stop with no artifacts, proposal-freeze is a status transition over
+    // an artifact change-init already scaffolded. The work phases and the
+    // execute human gate stay.
+    const brainstorm = phases.find((phase) => phase.id === 'brainstorm');
+    assert.equal(brainstorm.lite_skip, true, 'brainstorm must skip in lite mode (M18 #224)');
+    const proposal = phases.find((phase) => phase.id === 'proposal');
+    assert.equal(proposal.lite_skip, true, 'proposal-freeze must skip in lite mode (M18 #224)');
+    const execute = phases.find((phase) => phase.id === 'execute');
+    assert.equal(execute.lite_skip, undefined, 'execute is the work itself and must stay in lite mode');
+    const setInProgress = phases.find((phase) => phase.id === 'set-in-progress');
+    assert.equal(setInProgress.lite_skip, undefined, 'set-in-progress hosts the repo doctor readiness check and stays');
   });
 });
 

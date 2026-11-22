@@ -36,10 +36,16 @@ phases:
       with: { phase: "pre-openissue" }
       on_fail: stop
 
+  # M18 lite merge (evalid #224, lever B): brainstorm's only atom is a
+  # status transition and its gate is a human stop — no artifacts, no
+  # verification. On the lite track that stop costs a full gate
+  # stop/resume round trip per run, so lite skips the phase; direction
+  # decisions on lite are made inside the plan pass itself.
   - id: brainstorm
     label: "03 · Brainstorm"
     catalog_ref: 3
     required: true
+    lite_skip: true
     atoms:
       - id: B3.status.transition
         with: { to_stage: "brainstorm" }
@@ -67,10 +73,17 @@ phases:
       with: { require_full_contract: false }
       on_fail: stop
 
+  # M18 lite merge (evalid #224, lever B): proposal-freeze's only atom is
+  # a status transition; the proposal itself is scaffolded in change-init
+  # and consumed directly by plan. On the lite track the separate freeze
+  # phase is a transition-only round trip, so lite skips it — plan's
+  # artifact-verify gate still enforces plan.md/tasks.md, and the full
+  # track keeps the freeze.
   - id: proposal
     label: "06 · Proposal freeze"
     catalog_ref: 6
     required: true
+    lite_skip: true
     atoms:
       - id: B3.status.transition
         with: { to_stage: "proposal-freeze" }
