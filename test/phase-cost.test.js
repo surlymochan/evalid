@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { buildPhaseCostReport, extractTokenUsage } from '../src/core/phase-cost.js';
+import { buildPhaseCostReport, extractTokenUsage, phaseCostLedgerRows } from '../src/core/phase-cost.js';
 import { WorkflowExecutor } from '../src/core/workflow-executor.js';
 
 describe('phase cost report (pure accounting)', () => {
@@ -42,14 +42,55 @@ describe('phase cost report (pure accounting)', () => {
       ],
       wallClockMs: 20,
     });
-    assert.deepEqual(report.tokens, { input: 150, output: 30, total: 180 });
+    assert.deepEqual(report.tokens, { input: 150, output: 30, cache_read: 0, cache_write: 0, turns: 0, total: 180 });
   });
 
   test('extractTokenUsage normalizes common usage shapes', () => {
-    assert.deepEqual(extractTokenUsage({ usage: { input_tokens: 10, output_tokens: 5 } }), { input: 10, output: 5, total: 15 });
-    assert.deepEqual(extractTokenUsage({ total_tokens: 7 }), { input: 0, output: 0, total: 7 });
+    assert.deepEqual(extractTokenUsage({ usage: { input_tokens: 10, output_tokens: 5 } }), { input: 10, output: 5, cache_read: 0, cache_write: 0, turns: 0, total: 15 });
+    assert.deepEqual(extractTokenUsage({ total_tokens: 7 }), { input: 0, output: 0, cache_read: 0, cache_write: 0, turns: 0, total: 7 });
     assert.equal(extractTokenUsage({ ok: true }), null);
     assert.equal(extractTokenUsage(null), null);
+  });
+
+  // M18 slice 2 (#224): turns / cache fields are first-class — cache_read
+  // is ~95% of the openflow arm's bench tokens and decomposes as
+  // turns x per-turn footprint, so per-phase acceptance needs both.
+  test('extractTokenUsage carries turns and cache fields (agent-stream shape)', () => {
+    const usage = extractTokenUsage({ usage: { input: 100, output: 20, cache_read: 900, cache_write: 10, turns: 3 } });
+    assert.deepEqual(usage, { input: 100, output: 20, cache_read: 900, cache_write: 10, turns: 3, total: 1030 });
+    const camel = extractTokenUsage({ usage: { input_tokens: 5, output_tokens: 5, cacheRead: 40, turns: 2 } });
+    assert.deepEqual(camel, { input: 5, output: 5, cache_read: 40, cache_write: 0, turns: 2, total: 50 });
+  });
+
+  test('extractTokenUsage never misreads payload text as usage', () => {
+    assert.equal(extractTokenUsage({ output: '42' }), null);
+    assert.equal(extractTokenUsage({ output: 'build succeeded' }), null);
+  });
+
+  test('report aggregates turns/cache and flattens to ledger rows keyed by run id', () => {
+    const report = buildPhaseCostReport({
+      phases: [
+        { phase_id: 'plan', duration_ms: 10, tokens: { input: 100, output: 20, cache_read: 900, cache_write: 0, turns: 3, total: 1020 } },
+        { phase_id: 'execute', duration_ms: 10 },
+      ],
+      wallClockMs: 20,
+      workflowRunId: 'wf_test_1',
+      changeId: 'chg-1',
+      recordedAt: '2026-11-23T00:00:00.000Z',
+    });
+    assert.equal(report.workflow_run_id, 'wf_test_1');
+    assert.deepEqual(report.tokens, { input: 100, output: 20, cache_read: 900, cache_write: 0, turns: 3, total: 1020 });
+    const rows = phaseCostLedgerRows(report);
+    assert.equal(rows.length, 2);
+    assert.deepEqual(rows[0], {
+      workflow_run_id: 'wf_test_1', change_id: 'chg-1', phase: 'plan', status: 'completed',
+      duration_ms: 10, turns: 3, input: 100, output: 20, cache_read: 900, cache_write: 0,
+      total: 1020, recorded_at: '2026-11-23T00:00:00.000Z',
+    });
+    // A phase whose atoms reported nothing still gets a boundary row.
+    assert.equal(rows[1].phase, 'execute');
+    assert.equal(rows[1].total, 0);
+    assert.deepEqual(phaseCostLedgerRows(null), []);
   });
 });
 
@@ -105,7 +146,7 @@ describe('phase cost accounting (small workflow integration)', () => {
       assert.equal(cost.total_phase_ms, summed);
       assert.ok(cost.wall_clock_ms >= cost.total_phase_ms, 'wall clock covers the phase sum');
       assert.equal(cost.within_tolerance, true, `drift ${cost.drift_pct}% must stay within ${cost.tolerance_pct}%`);
-      assert.deepEqual(cost.tokens, { input: 200, output: 100, total: 300 });
+      assert.deepEqual(cost.tokens, { input: 200, output: 100, cache_read: 0, cache_write: 0, turns: 0, total: 300 });
 
       const phaseCompleted = logLines.filter((entry) => entry.kind === 'phase_completed');
       assert.equal(phaseCompleted.length, 2);
@@ -145,7 +186,59 @@ describe('phase cost accounting (small workflow integration)', () => {
       assert.ok(artifact.phases.every((phase) => phase.status === 'completed'));
       assert.equal(artifact.total_phase_ms, artifact.phases.reduce((sum, phase) => sum + phase.duration_ms, 0));
       assert.equal(artifact.within_tolerance, true, `drift ${artifact.drift_pct}% must stay within ${artifact.tolerance_pct}%`);
-      assert.deepEqual(artifact.tokens, { input: 80, output: 20, total: 100 });
+      assert.deepEqual(artifact.tokens, { input: 80, output: 20, cache_read: 0, cache_write: 0, turns: 0, total: 100 });
+    } finally {
+      rmSync(projectRoot, { recursive: true, force: true });
+    }
+  });
+
+  // M18 slice 2 (#224): the per-phase ledger is the durable metering
+  // surface — one jsonl row per phase per run, keyed by workflow_run_id,
+  // carrying turns / input / output / cache_read so per-phase acceptance
+  // never has to mine the execution log or a deleted raw tree again.
+  test('a completed run appends per-phase ledger rows with turns and cache fields', async () => {
+    const projectRoot = mkdtempSync(join(tmpdir(), 'openflow-cost-'));
+    try {
+      const modulePath = resolve(projectRoot, 'usagey.mjs');
+      writeFileSync(modulePath, `
+        export default async function run() {
+          return { ok: true, usage: { input: 120, output: 30, cache_read: 2400, cache_write: 0, turns: 4 } };
+        }
+      `, 'utf8');
+      const registry = { atoms: { 'TEST.usagey': { track: 'heavy', type: 'js', module: modulePath } } };
+      const phases = [
+        { id: 'plan', label: 'Plan', atoms: [{ id: 'TEST.usagey' }], gate: { type: 'skip' } },
+        { id: 'execute', label: 'Execute', atoms: [{ id: 'TEST.usagey' }], gate: { type: 'skip' } },
+      ];
+      const executor = new WorkflowExecutor({
+        workflow: { name: 'cost-ledger-smoke', track: 'heavy' },
+        phases,
+        registry,
+        projectRoot,
+        changeId: 'chg-ledger',
+        input: {},
+      });
+      await executor.run();
+
+      const artifact = JSON.parse(readFileSync(resolve(projectRoot, '.as-xflow', 'phase-cost.json'), 'utf8'));
+      const rows = readFileSync(resolve(projectRoot, '.as-xflow', 'phase-cost-ledger.jsonl'), 'utf8')
+        .trim().split('\n').map((line) => JSON.parse(line));
+      assert.equal(rows.length, 2);
+      assert.deepEqual(rows.map((row) => row.phase), ['plan', 'execute']);
+      for (const row of rows) {
+        assert.equal(row.workflow_run_id, artifact.workflow_run_id);
+        assert.ok(row.workflow_run_id, 'ledger rows are keyed by the run id');
+        assert.equal(row.change_id, 'chg-ledger');
+        assert.equal(row.status, 'completed');
+        assert.equal(row.turns, 4);
+        assert.equal(row.input, 120);
+        assert.equal(row.output, 30);
+        assert.equal(row.cache_read, 2400);
+        assert.equal(row.cache_write, 0);
+        assert.equal(row.total, 2550);
+        assert.ok(Number.isFinite(row.duration_ms));
+        assert.ok(row.recorded_at);
+      }
     } finally {
       rmSync(projectRoot, { recursive: true, force: true });
     }
@@ -194,7 +287,7 @@ describe('phase cost accounting (small workflow integration)', () => {
         [['red', 'completed'], ['green', 'failed']],
       );
       assert.equal(failed.cost.total_phase_ms, failed.cost.phases.reduce((sum, phase) => sum + phase.duration_ms, 0));
-      assert.deepEqual(failed.cost.tokens, { input: 10, output: 5, total: 15 });
+      assert.deepEqual(failed.cost.tokens, { input: 10, output: 5, cache_read: 0, cache_write: 0, turns: 0, total: 15 });
 
       const artifact = JSON.parse(readFileSync(resolve(projectRoot, '.as-xflow', 'phase-cost.json'), 'utf8'));
       assert.deepEqual(artifact.phases, failed.cost.phases);

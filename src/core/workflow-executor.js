@@ -21,13 +21,13 @@
  * `lite_skipped` instead of re-running the spec check.
  */
 
-import { existsSync, statSync, writeFileSync, readFileSync, mkdirSync } from 'fs';
+import { appendFileSync, existsSync, statSync, writeFileSync, readFileSync, mkdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { spawnSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { randomUUID } from 'crypto';
 import { appendExecutionLog, appendExecutionLogSync } from './execution-log.js';
-import { addTokenUsage, buildPhaseCostReport, emptyTokenUsage, extractTokenUsage } from './phase-cost.js';
+import { addTokenUsage, buildPhaseCostReport, emptyTokenUsage, extractTokenUsage, phaseCostLedgerRows } from './phase-cost.js';
 import { createConcurrencyPolicy } from './concurrency-policy.js';
 import { buildWorkflowManifest } from './workflow-integrity.js';
 
@@ -109,6 +109,8 @@ export class WorkflowExecutor {
     this.runtime.costReport = buildPhaseCostReport({
       phases: this.runtime.phaseCosts,
       wallClockMs,
+      workflowRunId: this.runtime.workflowRunId,
+      changeId: this.changeId || null,
     });
     this.persistCostReport(this.runtime.costReport);
     return this.runtime.costReport;
@@ -117,12 +119,25 @@ export class WorkflowExecutor {
   // The cost report is run evidence (issue #5 P1-1): besides riding on the
   // terminal execution-log event, persist it as a standalone artifact so a
   // reader never has to mine the ndjson log for the per-phase breakdown.
+  // M18 slice 2 (#224): also append one ledger row per phase to
+  // phase-cost-ledger.jsonl in the same directory — the per-run artifact
+  // is overwritten by the next run in the same project, while the ledger
+  // accumulates every run's phases keyed by workflow_run_id, which is
+  // what per-phase acceptance accounting (and the bench harness) joins on.
   // Best-effort by design — accounting must never fail the run itself.
   persistCostReport(report) {
     try {
       const dir = resolve(this.projectRoot, '.as-xflow');
       mkdirSync(dir, { recursive: true });
       writeFileSync(resolve(dir, 'phase-cost.json'), JSON.stringify(report, null, 2));
+      const rows = phaseCostLedgerRows(report);
+      if (rows.length > 0) {
+        appendFileSync(
+          resolve(dir, 'phase-cost-ledger.jsonl'),
+          rows.map((row) => JSON.stringify(row)).join('\n') + '\n',
+          'utf8',
+        );
+      }
     } catch {
       // The execution-log event still carries the report.
     }
