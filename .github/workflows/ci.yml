@@ -47,7 +47,8 @@ jobs:
             "private": true
           }
           JSON
+          evalid guide
+          evalid init --project-root .
+          evalid doctor --project-root .
+          evalid workflow validate yolo --project-root .
           xflow guide
-          xflow init --project-root .
-          xflow doctor --project-root .
-          xflow workflow validate yolo --project-root .

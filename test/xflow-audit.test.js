@@ -1323,7 +1323,7 @@ describe('xflow audit CLI positional form (M2 slice 1, #114)', () => {
       writeFileSync(diffPath, diff);
       const result = runCli(repo, [diffPath, '--base', base, '--claims', 'Tests: `node --test test/a.test.js` — 2 tests, all pass.']);
       assert.equal(result.status, 0, result.stdout + result.stderr);
-      assert.match(result.stdout, /xflow audit: verified/);
+      assert.match(result.stdout, /evalid audit: verified/);
       assert.match(result.stdout, /node --test test\/a\.test\.js/);
     } finally {
       rmSync(repo, { recursive: true, force: true });

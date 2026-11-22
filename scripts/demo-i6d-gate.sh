@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # M3 slice 4 — acceptance demo for the I6d assertion-execution gate.
 #
-# End-to-end proof, through the real `xflow audit` CLI (not the JS API):
+# End-to-end proof, through the real `evalid audit` CLI (not the JS API):
 #   RED   — a diff whose new test defines a callback that is never called,
 #           so its `assert value == 42` never executes, while the claimed
 #           pytest run still passes  -> audit must say mismatch, exit 1.
@@ -55,9 +55,9 @@ run_case() { # $1 = RED|GREEN, $2 = file content, $3 = expected verdict, $4 = ex
   git diff > "$WORK/$name.diff"
   printf 'Tests: `pytest test_dead.py` — 2 tests, all pass.\n' > "$WORK/$name.claims.txt"
   git checkout -q -- test_dead.py
-  echo "=== $name case: xflow audit --diff $name.diff --base $BASE ==="
+  echo "=== $name case: evalid audit --diff $name.diff --base $BASE ==="
   set +e
-  node "$EVALID_ROOT/bin/xflow.js" audit --repo "$DEMO" \
+  node "$EVALID_ROOT/bin/evalid.js" audit --repo "$DEMO" \
     --diff "$WORK/$name.diff" --base "$BASE" \
     --claims-file "$WORK/$name.claims.txt" --out "$WORK/$name.json"
   local rc=$?

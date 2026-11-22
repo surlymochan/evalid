@@ -1,6 +1,6 @@
 # evalid Demo Proof
 
-This page defines what an external evaluator should run before trusting xflow claims.
+This page defines what an external evaluator should run before trusting evalid claims.
 
 ## Clean Project Adoption
 
@@ -8,27 +8,27 @@ From an empty temporary project:
 
 ```bash
 npm install -g @surlymochan/evalid
-xflow demo clean
-xflow guide
-xflow assess
-xflow demo launch
-xflow init --project-root .
-xflow goal set "Ship the next verified change" --project-root .
-xflow goal audit --project-root . --json
-xflow doctor --project-root .
-xflow workflow validate yolo --project-root .
+evalid demo clean
+evalid guide
+evalid assess
+evalid demo launch
+evalid init --project-root .
+evalid goal set "Ship the next verified change" --project-root .
+evalid goal audit --project-root . --json
+evalid doctor --project-root .
+evalid workflow validate yolo --project-root .
 ```
 
 Expected result:
 
 - `.as-xflow/config.json` exists
-- `.xflow/GOAL.md` exists and `xflow goal audit --json` passes
+- `.xflow/GOAL.md` exists and `evalid goal audit --json` passes
 - doctor exits successfully
 - `yolo` validates through project-local config
 - no internal workflow files need to be copied into the consumer project
 
 The repository CI runs this same path by creating a minimal temporary `package.json` on the fly.
-For source checkout evaluation before npm publication, run `node bin/xflow.js
+For source checkout evaluation before npm publication, run `node bin/evalid.js
 demo clean` from this repository; it creates the temporary project, runs the
 same init/goal/doctor/yolo validation smoke, and cleans up automatically.
 
@@ -44,7 +44,7 @@ This proves:
 
 - full test suite passes
 - active-surface drift scan passes
-- installed xflow skill matches source
+- installed evalid skill matches source
 - package dry-run includes the runtime, docs, workflows, and skills
 - package dry-run excludes local config, test fixtures, Python caches, and Finder metadata
 
@@ -70,16 +70,16 @@ The required semantics are:
 Before claiming a new competitive advantage, run:
 
 ```bash
-xflow score
-xflow goal audit --json
-xflow corps --explain --json
-xflow compare superpowers
-xflow compare super-assistant
-xflow compare openspec
-xflow compare gstack
-xflow compare spec-kit
-xflow adapter import-file --input docs/fixtures/tracker-item.json --json
-xflow spec delta --change-id <change-id>
+evalid score
+evalid goal audit --json
+evalid corps --explain --json
+evalid compare superpowers
+evalid compare super-assistant
+evalid compare openspec
+evalid compare gstack
+evalid compare spec-kit
+evalid adapter import-file --input docs/fixtures/tracker-item.json --json
+evalid spec delta --change-id <change-id>
 npm run drift:scan
 npm run release:pack
 npm run publish:check
@@ -98,7 +98,7 @@ For competitor-led UI work, the heavy-track benchmark contract now supports two
 formal evidence paths. One of them is the phase-local capture path:
 
 ```bash
-xflow corps \
+evalid corps \
   --title "Competitor-aligned workbench" \
   --change-type frontend \
   --change-id competitor-workbench \
@@ -116,7 +116,7 @@ What must be true before calling the run complete:
 - `H6.visual.benchmark` records `benchmark_input_mode: "capture_url"`
 - `visual_benchmark.json` is `reference_backed`
 - the captured scenario resolves both `reference_image` and `screenshot_image`
-- `xflow proof --track corps --change-id <id>` returns `ok=true`
+- `evalid proof --track corps --change-id <id>` returns `ok=true`
 
 ## Minimal Example
 

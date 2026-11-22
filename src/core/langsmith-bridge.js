@@ -391,7 +391,7 @@ export async function runLangSmithVerify(options = {}) {
 /** Human-readable rendering for the CLI (machine output uses --json). */
 export function renderLangSmithReport(result) {
   const lines = [
-    `xflow langsmith verify — project "${result.project}"${result.dryRun ? ' (dry-run: nothing written back)' : ''}`,
+    `evalid langsmith verify — project "${result.project}"${result.dryRun ? ' (dry-run: nothing written back)' : ''}`,
   ];
   if (result.traces.length === 0) {
     lines.push('no root runs found in this project.');

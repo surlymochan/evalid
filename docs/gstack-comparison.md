@@ -41,7 +41,7 @@ it set out to close, and browser-centered QA flow is also effectively a tie.
 Machine-readable form:
 
 ```bash
-xflow compare gstack --json
+evalid compare gstack --json
 ```
 
 ## When Gstack Wins
@@ -57,24 +57,24 @@ xflow compare gstack --json
 - The team wants `.xflow/GOAL.md` to survive thread changes and be consumed by
   yolo, corps, Ralph, handoff, and takein.
 - The team wants named QA and host commands instead of shell-script spelunking:
-  `xflow qa review`, `xflow qa ship`, `xflow qa benchmark`, `xflow host status`,
-  `xflow host sync`, `xflow host diff`.
+  `evalid qa review`, `evalid qa ship`, `evalid qa benchmark`, `evalid host status`,
+  `evalid host sync`, `evalid host diff`.
 - The team wants explicit named roles inside the repo runtime:
-  `xflow role developer`, `xflow role reviewer`, `xflow role qa`,
-  `xflow role release`, `xflow role product`.
+  `evalid role developer`, `evalid role reviewer`, `evalid role qa`,
+  `evalid role release`, `evalid role product`.
 - Public claims must be backed by local commands such as:
 
 ```bash
-xflow compare gstack --json
-xflow qa review --url http://127.0.0.1:3000 --platform-profile mobile_h5 --json
-xflow qa ship --url http://127.0.0.1:3000 --platform-profile mobile_h5 --json
-xflow qa benchmark --url http://127.0.0.1:3000 --platform-profile mobile_h5 --json
-xflow role qa --json
-xflow host status --json
-xflow goal audit --json
-xflow launch audit --strict --json
-xflow package preflight --check-registry --check-auth --json
-xflow adoption validate --json
+evalid compare gstack --json
+evalid qa review --url http://127.0.0.1:3000 --platform-profile mobile_h5 --json
+evalid qa ship --url http://127.0.0.1:3000 --platform-profile mobile_h5 --json
+evalid qa benchmark --url http://127.0.0.1:3000 --platform-profile mobile_h5 --json
+evalid role qa --json
+evalid host status --json
+evalid goal audit --json
+evalid launch audit --strict --json
+evalid package preflight --check-registry --check-auth --json
+evalid adoption validate --json
 npm run release:pack
 ```
 

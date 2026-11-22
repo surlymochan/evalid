@@ -24,7 +24,7 @@ tool changes, workflow runs, handoff refreshes, and proof review.
 | --- | --- | --- | --- |
 | `xflow:goal` | Strong foundation | `.xflow/GOAL.md`, native goal sync boundary, shared consumption rules | Must explain why it is more durable than a thread goal |
 | `xflow:yolo` | Strong | YAML-backed lite workflow, split TDD, archive order, drift tests | Must show goal alignment without adding ceremony |
-| `xflow:corps` | Strong but complex | Governed `xflow corps`, `corps_proof.json`, visual proof, no-stub runtime witnesses | Must make proof language understandable to first-time users |
+| `xflow:corps` | Strong but complex | Governed `evalid corps`, `corps_proof.json`, visual proof, no-stub runtime witnesses | Must make proof language understandable to first-time users |
 | `xflow:ralph` | Strong bridge | Conversation-native completion loop with verification and self-heal | Must treat `.xflow/GOAL.md` as a completion audit input |
 | Skill family | Strong engine, improving packaging | skill sync/diff, tooling matrix, public benchmark | Must present the family as one ladder, not many unrelated entry points |
 
@@ -43,22 +43,22 @@ auditable.
 | Cross-tool portability | 20 | 10 | 18 | xflow:goal |
 | Auditability | 20 | 20 | 17 | Codex native goal |
 
-The scorecard is evidence-linked. `xflow compare codex-goal --json` exposes
+The scorecard is evidence-linked. `evalid compare codex-goal --json` exposes
 `evidence_refs` per dimension, including `.xflow/GOAL.md`,
-`xflow goal show --json`, `xflow goal audit --json`, Codex native completion
+`evalid goal show --json`, `evalid goal audit --json`, Codex native completion
 accounting, and Codex/OpenCode skill sync checks.
 
 Machine-readable form:
 
 ```bash
-xflow compare codex-goal --json
+evalid compare codex-goal --json
 ```
 
 ## Why xflow Can Beat Codex Goal
 
 `xflow:goal` beats a native Codex goal only if these conditions are true:
 
-1. **Durable** - the goal is stored in the repo at `.xflow/GOAL.md` through `xflow goal set`, not only in one chat thread.
+1. **Durable** - the goal is stored in the repo at `.xflow/GOAL.md` through `evalid goal set`, not only in one chat thread.
 2. **Portable** - Codex, OpenCode, Claude Code, Cursor, Gemini, and generic CLI agents can read the same artifact.
 3. **Consumable** - the goal is read before planning, yolo, corps, Ralph, handoff, and takein work.
 4. **Auditable** - completion reports say how the delivered change aligned with or deliberately diverged from the goal.
@@ -74,7 +74,7 @@ The skill set should be explained as a ladder:
 
 | Step | Entry | Promise |
 | --- | --- | --- |
-| 1 | `xflow:goal` / `xflow goal set` | Define the durable project direction. |
+| 1 | `xflow:goal` / `evalid goal set` | Define the durable project direction. |
 | 2 | `xflow:takein` | Reload durable context before acting. |
 | 3 | `xflow:plan` | Produce one reusable implementation plan. |
 | 4a | `xflow:yolo` | Execute low-ceremony work with TDD and archive gates. |
@@ -90,10 +90,10 @@ skills, and it explains why xflow is more than Codex goal plus prompts.
 Before claiming the skill family is ready for public launch:
 
 ```bash
-xflow compare codex-goal --json
-xflow score
-xflow goal show --json
-xflow goal audit --json
+evalid compare codex-goal --json
+evalid score
+evalid goal show --json
+evalid goal audit --json
 npm run drift:scan
 npm run skill:diff
 npm run release:pack
@@ -113,8 +113,8 @@ The docs must also prove:
 Use this when someone asks whether `goal` itself still matters:
 
 ```bash
-xflow compare codex-goal --json
-xflow goal audit --json
+evalid compare codex-goal --json
+evalid goal audit --json
 ```
 
 The comparison is intentionally narrow. Codex native goal remains the right tool

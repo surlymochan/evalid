@@ -18,16 +18,16 @@ Do not use corps for ordinary backend, docs, or infrastructure changes. Use
 ## First-Time Sequence
 
 ```bash
-xflow corps --explain
-xflow goal show --json
-xflow goal audit --json
-xflow corps --title "<product or UI change>" --change-type frontend --change-id <change-id> --dry-run --json
-xflow corps --title "<product or UI change>" --change-type frontend --change-id <change-id>
-xflow proof --track corps --change-id <change-id>
+evalid corps --explain
+evalid goal show --json
+evalid goal audit --json
+evalid corps --title "<product or UI change>" --change-type frontend --change-id <change-id> --dry-run --json
+evalid corps --title "<product or UI change>" --change-type frontend --change-id <change-id>
+evalid proof --track corps --change-id <change-id>
 ```
 
 The dry run explains the proof contract. The real run is not complete until
-`xflow proof --track corps` writes `corps_proof.json` with `ok=true`.
+`evalid proof --track corps` writes `corps_proof.json` with `ok=true`.
 
 ## Proof Contract
 
@@ -47,7 +47,7 @@ Competitor-led UI requires a primary reference surface and exactly one benchmark
 evidence path before execution:
 
 ```bash
-xflow corps \
+evalid corps \
   --title "Competitor-aligned workbench" \
   --change-type frontend \
   --change-id competitor-workbench \

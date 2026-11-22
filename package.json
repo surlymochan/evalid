@@ -1,7 +1,7 @@
 {
   "name": "@surlymochan/evalid",
   "version": "0.5.38",
-  "description": "Claimed != verified: a runtime verification layer for coding agents. It seals each test run and replays it from a clean snapshot, with a zero-judge gate pipeline (spec clarification, code review, TDD proof) and the xflow CLI.",
+  "description": "Claimed != verified: a runtime verification layer for coding agents. It seals each test run and replays it from a clean snapshot, with a zero-judge gate pipeline (spec clarification, code review, TDD proof) and the evalid CLI.",
   "keywords": [
     "ai-agents",
     "coding-agents",
@@ -27,6 +27,7 @@
   "type": "module",
   "main": "src/index.js",
   "bin": {
+    "evalid": "bin/evalid.js",
     "xflow": "bin/xflow.js"
   },
   "files": [
@@ -60,11 +61,11 @@
     "access": "public"
   },
   "scripts": {
-    "start": "node bin/xflow.js serve",
+    "start": "node bin/evalid.js serve",
     "test": "node scripts/run-tests.mjs",
     "coverage": "c8 node scripts/run-tests.mjs",
     "drift:scan": "node --test test/workflow-drift-scan.test.js",
-    "doctor": "node bin/xflow.js doctor",
+    "doctor": "node bin/evalid.js doctor",
     "verify": "npm test",
     "skill:sync": "sh xflow/scripts/sync_installed_xflow_skill.sh",
     "skill:diff": "sh xflow/scripts/check_installed_xflow_skill_sync.sh",
@@ -72,9 +73,9 @@
     "publish:check": "npm run release:pack && npm publish --dry-run --access public",
     "release:local": "npm run verify && npm run drift:scan && npm run skill:sync && npm run skill:diff",
     "release:pack": "npm run verify && npm run drift:scan && npm run skill:diff && npm run pack:check",
-    "workflow:yolo": "node bin/xflow.js workflow run workflows/yolo.yaml",
-    "workflow:corps": "node bin/xflow.js corps",
-    "atom:list": "node bin/xflow.js atom list"
+    "workflow:yolo": "node bin/evalid.js workflow run workflows/yolo.yaml",
+    "workflow:corps": "node bin/evalid.js corps",
+    "atom:list": "node bin/evalid.js atom list"
   },
   "dependencies": {
     "ajv": "^8.12.0",

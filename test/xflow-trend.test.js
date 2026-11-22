@@ -150,7 +150,7 @@ describe('trend aggregation', () => {
       { repo: 'surlymochan/evalid', change_id: 'b', recorded_at: '2026-11-10T06:00:00.000Z', agent: 'codex', model: 'gpt-5', claimed_passed: 5, replayed_passed: 2, samples: 1, source: 'verify_proof' },
     ], { since: '2026-11-01' });
     const expected = [
-      'xflow trend — claimed vs replayed (since 2026-11-01)',
+      'evalid trend — claimed vs replayed (since 2026-11-01)',
       '',
       'repo                agent/model  claimed  replayed  delta  delta%  samples',
       '------------------  -----------  -------  --------  -----  ------  -------',
@@ -280,7 +280,7 @@ describe('xflow trend CLI', () => {
       const result = runCli(['trend', '--repo', projectRoot]);
       assert.equal(result.status, 0, result.stderr || result.stdout);
       const expected = [
-        'xflow trend — claimed vs replayed (all time)',
+        'evalid trend — claimed vs replayed (all time)',
         '',
         'repo                 agent/model  claimed  replayed  delta  delta%  samples',
         '-------------------  -----------  -------  --------  -----  ------  -------',
@@ -351,7 +351,7 @@ describe('xflow trend CLI', () => {
       assert.equal(result.status, 3, result.stdout);
       assert.match(result.stdout, /no proof ledger found/);
       assert.match(result.stdout, /verify_proof\.json/);
-      assert.match(result.stdout, /xflow proof/);
+      assert.match(result.stdout, /evalid proof/);
     } finally {
       rmSync(projectRoot, { recursive: true, force: true });
     }
@@ -392,12 +392,12 @@ describe('xflow trend CLI', () => {
   test('trend --help shows usage', () => {
     const result = runCli(['trend', '--help']);
     assert.equal(result.status, 0, result.stderr || result.stdout);
-    assert.match(result.stdout, /xflow trend \[--repo <path>\] \[--since <date>\]/);
+    assert.match(result.stdout, /evalid trend \[--repo <path>\] \[--since <date>\]/);
   });
 
   test('xflow --help lists trend', () => {
     const result = runCli(['--help']);
     assert.equal(result.status, 0, result.stderr || result.stdout);
-    assert.match(result.stdout, /xflow trend/);
+    assert.match(result.stdout, /evalid trend/);
   });
 });

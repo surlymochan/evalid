@@ -11,11 +11,11 @@ Use the same brownfield change in both systems:
 ## xflow Run
 
 ```bash
-xflow init --project-root .
-xflow guide
-xflow workflow validate yolo --project-root .
-xflow spec delta --project-root . --change-id <change-id>
-xflow score
+evalid init --project-root .
+evalid guide
+evalid workflow validate yolo --project-root .
+evalid spec delta --project-root . --change-id <change-id>
+evalid score
 npm run release:pack
 ```
 
@@ -56,7 +56,7 @@ Record the generated spec, plan, tasks, implementation evidence, and quality che
 | Test quality | `quality-0.json` rejects empty, snapshot-only, or mock-heavy tests without assertions. |
 | Archive closure | Handoff/AHA/archive order is explicit and test-covered. |
 | Release readiness | `npm run release:pack` passes. |
-| Public comparison | `xflow compare spec-kit --json` prints machine-readable edges. |
+| Public comparison | `evalid compare spec-kit --json` prints machine-readable edges. |
 
 ## Current Judgment
 
@@ -65,9 +65,9 @@ xflow should win the local engineering rigor section. spec-kit may still win pub
 Do not claim a full spec-kit product win unless:
 
 - `npm run publish:check` passes
-- `xflow package preflight --check-registry --check-auth --json` passes before public publish
-- `xflow launch audit --pre-publish --strict --json` passes before the irreversible publish step
-- `xflow package audit --check-registry --json` passes after public publish
+- `evalid package preflight --check-registry --check-auth --json` passes before public publish
+- `evalid launch audit --pre-publish --strict --json` passes before the irreversible publish step
+- `evalid package audit --check-registry --json` passes after public publish
 - `docs/integrations.md` covers the target integration class
-- `xflow compare spec-kit --json` is green
+- `evalid compare spec-kit --json` is green
 - the benchmark artifacts above are produced for the same change

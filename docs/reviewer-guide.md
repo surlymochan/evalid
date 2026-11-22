@@ -36,8 +36,8 @@ Request changes when any of these are true:
 ## Reviewer Shortcuts
 
 ```bash
-xflow doctor
-xflow score
+evalid doctor
+evalid score
 npm run drift:scan
 npm run skill:diff
 ```

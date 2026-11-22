@@ -18,19 +18,19 @@ Run:
 
 ```bash
 npm run publish:check
-xflow evaluate --json
-xflow release status --json
-xflow launch dossier --output docs/launch-dossier.md
-xflow launch claims --json
-xflow launch copy --json
-xflow adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo --json
-xflow goal audit --json
-xflow adoption status --json
-xflow package status --json
-xflow package preflight --check-registry --check-auth --json
-xflow launch audit --pre-publish --strict --json
-xflow package audit --check-registry --json
-xflow launch audit --strict
+evalid evaluate --json
+evalid release status --json
+evalid launch dossier --output docs/launch-dossier.md
+evalid launch claims --json
+evalid launch copy --json
+evalid adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo --json
+evalid goal audit --json
+evalid adoption status --json
+evalid package status --json
+evalid package preflight --check-registry --check-auth --json
+evalid launch audit --pre-publish --strict --json
+evalid package audit --check-registry --json
+evalid launch audit --strict
 ```
 
 For the exact last-mile command sequence and current auth boundary, use
@@ -47,7 +47,7 @@ Expected proof:
 
 - full test suite passes
 - active-surface drift scan passes
-- installed xflow skill diff is clean
+- installed evalid skill diff is clean
 - npm package dry-run excludes local config, tests, Python caches, and Finder metadata
 - npm publish dry-run can construct the public package without mutating the registry
 - evaluate gives a single machine-readable brief with score, Codex goal / Superpowers positioning, launch blockers, package evidence, release-owner status, safe claims, and the recommended first-run path
@@ -90,56 +90,56 @@ Record these in the release note or PR:
 
 - `npm run release:pack`
 - `npm run publish:check`
-- `xflow evaluate --json`
-- `xflow release status --json`
-- `xflow launch dossier --output docs/launch-dossier.md`
-- `xflow launch claims --json`
-- `xflow launch copy --json`
-- `xflow adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo --json`
-- `xflow goal audit --json`
-- `xflow adoption status --json`
-- `xflow package status --json`
-- `xflow package preflight --check-registry --check-auth --json`
-- `xflow launch audit --pre-publish --strict --json`
-- `xflow adoption validate --json`
-- `xflow adoption validate --splash --json`
-- `xflow package audit --check-registry --json`
-- `xflow launch audit --strict --json`
-- `xflow launch audit --splash --strict --json`
+- `evalid evaluate --json`
+- `evalid release status --json`
+- `evalid launch dossier --output docs/launch-dossier.md`
+- `evalid launch claims --json`
+- `evalid launch copy --json`
+- `evalid adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo --json`
+- `evalid goal audit --json`
+- `evalid adoption status --json`
+- `evalid package status --json`
+- `evalid package preflight --check-registry --check-auth --json`
+- `evalid launch audit --pre-publish --strict --json`
+- `evalid adoption validate --json`
+- `evalid adoption validate --splash --json`
+- `evalid package audit --check-registry --json`
+- `evalid launch audit --strict --json`
+- `evalid launch audit --splash --strict --json`
 - `docs/adoption/README.md` reviewed, with at least one real adoption record before splash launch
 - `docs/adoption/openflow-release-hardening.md` reviewed as the current non-fixture adoption record
 - `docs/npm-publish-handoff.md` reviewed before real publish
-- `xflow score`
-- `xflow compare superpowers`
-- `xflow compare super-assistant`
-- `xflow compare openspec`
-- `xflow compare gstack`
-- `xflow compare spec-kit`
+- `evalid score`
+- `evalid compare superpowers`
+- `evalid compare super-assistant`
+- `evalid compare openspec`
+- `evalid compare gstack`
+- `evalid compare spec-kit`
 - `docs/team-adoption.md` 95 percent readiness gate reviewed
 - `git status --short --branch`
 
 ## Failure Rules
 
 - If `npm view @surlymochan/evalid` returns an existing package not owned by this project, choose a new package name before publishing.
-- If `xflow package preflight --check-registry --check-auth --json` fails, do not run the real publish.
-- If `xflow goal audit --json` fails, do not claim xflow goal is stronger than Codex native goal.
-- If `xflow launch claims --json` lists a claim under `blocked_claims`, do not use that claim in launch copy.
-- If `xflow launch copy --json` lists a phrase under `forbidden_phrases`, do not use that phrase in launch posts, README badges, or release notes.
-- If `xflow launch audit --pre-publish --strict --json` fails, do not run the real publish; strict pre-publish mode runs the same npm identity and registry checks as package preflight, then combines them with score and adoption evidence.
-- If `xflow package audit --check-registry --json` fails after publish, do not claim public package availability.
+- If `evalid package preflight --check-registry --check-auth --json` fails, do not run the real publish.
+- If `evalid goal audit --json` fails, do not claim evalid goal is stronger than Codex native goal.
+- If `evalid launch claims --json` lists a claim under `blocked_claims`, do not use that claim in launch copy.
+- If `evalid launch copy --json` lists a phrase under `forbidden_phrases`, do not use that phrase in launch posts, README badges, or release notes.
+- If `evalid launch audit --pre-publish --strict --json` fails, do not run the real publish; strict pre-publish mode runs the same npm identity and registry checks as package preflight, then combines them with score and adoption evidence.
+- If `evalid package audit --check-registry --json` fails after publish, do not claim public package availability.
 - If `npm publish --dry-run` includes `test/`, `.claude/`, `__pycache__`, `.pyc`, or local `.as-xflow/` state, fix package inclusion before publishing.
-- If `xflow score` falls below `100/100`, fix score evidence before publishing.
-- If `xflow launch audit --strict --json` lists `real_external_adoption` as missing,
+- If `evalid score` falls below `100/100`, fix score evidence before publishing.
+- If `evalid launch audit --strict --json` lists `real_external_adoption` as missing,
   publish can still be dry-run ready, but do not claim an industry-splash
   launch until a real adoption artifact exists under `docs/adoption/` or a
   linked public PR provides equivalent evidence. The audit removes this gap
   only when the adoption validator passes.
-- If `xflow launch audit --splash --strict --json` lists `third_party_adoption`
+- If `evalid launch audit --splash --strict --json` lists `third_party_adoption`
   as missing, do not claim broad third-party adoption or industry-splash
   readiness; maintainer dogfooding can support quality claims, but not ecosystem
   adoption claims.
-- If `xflow compare spec-kit` points to missing docs, do not publish a superiority claim.
-- If `xflow compare gstack` cannot clearly explain where gstack is stronger, do not publish a fair comparison claim.
-- If `xflow compare superpowers` cannot explain where Superpowers is stronger, do not publish a fair comparison claim.
-- If `xflow compare super-assistant` cannot explain where Super-Assistant keeps stronger enterprise connector breadth, do not publish a fair comparison claim.
+- If `evalid compare spec-kit` points to missing docs, do not publish a superiority claim.
+- If `evalid compare gstack` cannot clearly explain where gstack is stronger, do not publish a fair comparison claim.
+- If `evalid compare superpowers` cannot explain where Superpowers is stronger, do not publish a fair comparison claim.
+- If `evalid compare super-assistant` cannot explain where Super-Assistant keeps stronger enterprise connector breadth, do not publish a fair comparison claim.
 - If the team adoption operating model is not linked from README or reviewer docs, do not promote the package for multi-person adoption.

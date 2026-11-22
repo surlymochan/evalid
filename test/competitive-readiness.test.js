@@ -20,27 +20,27 @@ describe('competitive readiness benchmark', () => {
       '3 Minute Start',
       'git clone https://github.com/surlymochan/evalid.git',
       'cd evalid',
-      'xflow quickstart',
-      'xflow guide',
-      'xflow evaluate',
-      'xflow release status',
-      'xflow assess',
-      'xflow demo launch',
-      'xflow launch dossier',
-      'xflow launch copy',
+      'evalid quickstart',
+      'evalid guide',
+      'evalid evaluate',
+      'evalid release status',
+      'evalid assess',
+      'evalid demo launch',
+      'evalid launch dossier',
+      'evalid launch copy',
       'For a source checkout',
-      'node bin/xflow.js compare codex-goal',
-      'node bin/xflow.js quickstart',
-      'node bin/xflow.js evaluate',
-      'node bin/xflow.js launch copy',
-      'xflow adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo',
-      'xflow package preflight --check-registry --check-auth --json',
-      'xflow package audit --check-registry --json',
-      'xflow init --project-root .',
-      'xflow goal set "Ship the next verified change" --project-root .',
-      'xflow goal audit --project-root . --json',
-      'xflow doctor --project-root .',
-      'xflow workflow validate yolo --project-root .',
+      'node bin/evalid.js compare codex-goal',
+      'node bin/evalid.js quickstart',
+      'node bin/evalid.js evaluate',
+      'node bin/evalid.js launch copy',
+      'evalid adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo',
+      'evalid package preflight --check-registry --check-auth --json',
+      'evalid package audit --check-registry --json',
+      'evalid init --project-root .',
+      'evalid goal set "Ship the next verified change" --project-root .',
+      'evalid goal audit --project-root . --json',
+      'evalid doctor --project-root .',
+      'evalid workflow validate yolo --project-root .',
       'tdd-red -> execute -> tdd-green',
       'I6c.tdd.quality_review',
       'docs/tooling-matrix.md',
@@ -62,21 +62,21 @@ describe('competitive readiness benchmark', () => {
       'docs/team-adoption.md',
       'RELEASE_NOTES.md',
       'docs/fixtures/tracker-item.json',
-      'xflow score',
-      'xflow evaluate',
-      'xflow assess',
-      'xflow demo launch',
-      'xflow launch dossier',
-      'xflow package preflight',
-      'xflow package audit',
+      'evalid score',
+      'evalid evaluate',
+      'evalid assess',
+      'evalid demo launch',
+      'evalid launch dossier',
+      'evalid package preflight',
+      'evalid package audit',
     ]) {
       assert.match(rootReadme, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
 
     const firstRunBlock = rootReadme.match(/For a source checkout:[\s\S]*?```bash\n([\s\S]*?)```/)?.[1] || '';
-    assert.doesNotMatch(firstRunBlock, /xflow adoption validate --json/);
-    assert.doesNotMatch(firstRunBlock, /xflow package preflight/);
-    assert.doesNotMatch(firstRunBlock, /xflow package audit/);
+    assert.doesNotMatch(firstRunBlock, /evalid adoption validate --json/);
+    assert.doesNotMatch(firstRunBlock, /evalid package preflight/);
+    assert.doesNotMatch(firstRunBlock, /evalid package audit/);
 
     assert.match(rootReadme, /actions\/workflows\/ci\.yml\/badge\.svg/);
     assert.match(rootReadme, /docs\/assets\/demo\.gif/);
@@ -95,65 +95,65 @@ describe('competitive readiness benchmark', () => {
       'Goal alignment',
       'One-shot evaluation',
       'Codex goal / Superpowers / Super-Assistant positioning',
-      'xflow goal set',
-      'xflow goal show --json',
-      'xflow goal audit --json',
+      'evalid goal set',
+      'evalid goal show --json',
+      'evalid goal audit --json',
       'Ecosystem packaging',
       'demo proof',
-      'xflow guide',
-      'xflow quickstart',
-      'xflow assess',
-      'xflow demo launch',
-      'xflow launch audit',
-      'xflow launch claims',
-      'xflow launch copy',
-      'xflow package preflight',
-      'xflow package audit',
-      'xflow doctor',
-      'xflow score',
-      'xflow assess --json',
-      'xflow evaluate --json',
-      'xflow demo launch --json',
-      'xflow launch dossier',
-      'xflow launch claims --json',
-      'xflow launch copy --json',
-      'xflow launch audit --strict --json',
-      'xflow adoption kit --name <team-or-project> --source <tracker-or-pr> --track yolo',
-      'xflow adoption init --name <team-or-project> --source <tracker-or-pr> --track yolo',
-      'xflow package preflight --check-registry --check-auth --json',
-      'xflow launch audit --pre-publish --strict --json',
-      'xflow package audit --check-registry --json',
+      'evalid guide',
+      'evalid quickstart',
+      'evalid assess',
+      'evalid demo launch',
+      'evalid launch audit',
+      'evalid launch claims',
+      'evalid launch copy',
+      'evalid package preflight',
+      'evalid package audit',
+      'evalid doctor',
+      'evalid score',
+      'evalid assess --json',
+      'evalid evaluate --json',
+      'evalid demo launch --json',
+      'evalid launch dossier',
+      'evalid launch claims --json',
+      'evalid launch copy --json',
+      'evalid launch audit --strict --json',
+      'evalid adoption kit --name <team-or-project> --source <tracker-or-pr> --track yolo',
+      'evalid adoption init --name <team-or-project> --source <tracker-or-pr> --track yolo',
+      'evalid package preflight --check-registry --check-auth --json',
+      'evalid launch audit --pre-publish --strict --json',
+      'evalid package audit --check-registry --json',
       'docs/quality-assessment.md',
       'docs/launch-demo.md',
       'docs/adoption/README.md',
       'docs/goal-vs-codex.md',
-      'xflow compare codex-goal',
-      'xflow compare gstack',
-      'xflow compare openspec',
-      'xflow compare spec-kit',
-      'xflow compare superpowers',
-      'xflow compare super-assistant',
-      'xflow adapter import-file',
+      'evalid compare codex-goal',
+      'evalid compare gstack',
+      'evalid compare openspec',
+      'evalid compare spec-kit',
+      'evalid compare superpowers',
+      'evalid compare super-assistant',
+      'evalid adapter import-file',
       'npm run release:pack',
       'npm run publish:check',
-      'xflow package audit --check-registry --json',
+      'evalid package audit --check-registry --json',
       'Required Next Wins',
     ]) {
       assert.match(benchmark, new RegExp(phrase));
     }
 
     assert.match(benchmark, /Superpowers/);
-    assert.match(benchmark, /xflow compare superpowers/);
+    assert.match(benchmark, /evalid compare superpowers/);
     assert.match(benchmark, /Super-Assistant/);
-    assert.match(benchmark, /xflow compare super-assistant/);
+    assert.match(benchmark, /evalid compare super-assistant/);
     assert.match(benchmark, /OpenSpec/);
     assert.match(benchmark, /spec-kit/);
     assert.match(benchmark, /gstack/);
-    assert.match(benchmark, /`xflow init`/);
+    assert.match(benchmark, /`evalid init`/);
     assert.match(benchmark, /\.as-xflow\/config\.json/);
   });
 
-  test('goal benchmark explains why xflow goal can beat Codex native goal', () => {
+  test('goal benchmark explains why evalid goal can beat Codex native goal', () => {
     const goalBenchmark = readFileSync(resolve(REPO_ROOT, 'docs', 'goal-vs-codex.md'), 'utf8');
     const goalSkill = readFileSync(resolve(REPO_ROOT, 'xflow', 'goal', 'SKILL.md'), 'utf8');
     const yoloSkill = readFileSync(resolve(REPO_ROOT, 'xflow', 'yolo', 'SKILL.md'), 'utf8');
@@ -168,10 +168,10 @@ describe('competitive readiness benchmark', () => {
       'Consumable',
       'Auditable',
       'The Public Ladder',
-      'xflow goal set',
-      'xflow goal show --json',
-      'xflow goal audit --json',
-      'xflow compare codex-goal --json',
+      'evalid goal set',
+      'evalid goal show --json',
+      'evalid goal audit --json',
+      'evalid compare codex-goal --json',
       'xflow:goal',
       'xflow:yolo',
       'xflow:corps',
@@ -200,14 +200,14 @@ describe('competitive readiness benchmark', () => {
       'behavior-discipline coverage',
       'Repo-local evidence',
       'Launch readiness',
-      'xflow coach bugfix',
-      'xflow coach tdd',
-      'xflow coach debug',
-      'xflow coach qa',
-      'xflow coach ship',
+      'evalid coach bugfix',
+      'evalid coach tdd',
+      'evalid coach debug',
+      'evalid coach qa',
+      'evalid coach ship',
       'evidence_refs',
       'workflows/corps.yaml',
-      'xflow compare superpowers --json',
+      'evalid compare superpowers --json',
     ]) {
       assert.match(comparison, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
@@ -222,9 +222,9 @@ describe('competitive readiness benchmark', () => {
       'Policy overlay and team constraints',
       'Enterprise atomization',
       'Notification / gate separation',
-      'xflow compare super-assistant --json',
-      'xflow policy validate --json',
-      'xflow intake recommend',
+      'evalid compare super-assistant --json',
+      'evalid policy validate --json',
+      'evalid intake recommend',
       'notify.checkpoint',
       'approves_gate=false',
       'plugin.run',
@@ -242,7 +242,7 @@ describe('competitive readiness benchmark', () => {
 
     for (const phrase of [
       'shape -> choose-track -> execute -> review -> finish',
-      'xflow guide',
+      'evalid guide',
       'xflow:plan',
       'xflow:yolo',
       'xflow:corps',
@@ -260,29 +260,29 @@ describe('competitive readiness benchmark', () => {
     const readme = readFileSync(resolve(REPO_ROOT, 'xflow', 'README.md'), 'utf8');
 
     for (const phrase of [
-      'xflow guide',
-      'xflow evaluate',
-      'xflow assess',
-      'xflow demo launch',
-      'xflow launch dossier',
+      'evalid guide',
+      'evalid evaluate',
+      'evalid assess',
+      'evalid demo launch',
+      'evalid launch dossier',
       'Use source checkout mode before npm publication',
-      'node bin/xflow.js compare codex-goal',
-      'node bin/xflow.js quickstart',
-      'node bin/xflow.js evaluate',
-      'xflow adoption trial --name first-team --source first-tracker --track yolo',
-      'xflow adoption kit --name first-team --source first-tracker --track yolo',
-      'xflow adoption init --name first-team --source first-tracker --track yolo',
-      'xflow adoption validate --json',
-      'xflow goal audit --project-root . --json',
-      'xflow package preflight --check-registry --check-auth --json',
-      'xflow launch audit --pre-publish --strict --json',
-      'xflow package audit --check-registry --json',
+      'node bin/evalid.js compare codex-goal',
+      'node bin/evalid.js quickstart',
+      'node bin/evalid.js evaluate',
+      'evalid adoption trial --name first-team --source first-tracker --track yolo',
+      'evalid adoption kit --name first-team --source first-tracker --track yolo',
+      'evalid adoption init --name first-team --source first-tracker --track yolo',
+      'evalid adoption validate --json',
+      'evalid goal audit --project-root . --json',
+      'evalid package preflight --check-registry --check-auth --json',
+      'evalid launch audit --pre-publish --strict --json',
+      'evalid package audit --check-registry --json',
       'npm install -g @surlymochan/evalid',
-      'xflow init --project-root .',
-      'xflow goal set "Ship the next verified change" --project-root .',
-      'xflow doctor --project-root .',
-      'xflow workflow validate yolo',
-      'xflow workflow run yolo',
+      'evalid init --project-root .',
+      'evalid goal set "Ship the next verified change" --project-root .',
+      'evalid doctor --project-root .',
+      'evalid workflow validate yolo',
+      'evalid workflow run yolo',
       'tdd-red-command',
       'tdd-green-command',
       'npm run release:local',
@@ -291,9 +291,9 @@ describe('competitive readiness benchmark', () => {
     }
 
     const publishedPackageBlock = quickstart.match(/Use the published package path[\s\S]*?```bash\n([\s\S]*?)```/)?.[1] || '';
-    assert.doesNotMatch(publishedPackageBlock, /xflow adoption validate --json/);
-    assert.doesNotMatch(publishedPackageBlock, /xflow package preflight/);
-    assert.doesNotMatch(publishedPackageBlock, /xflow package audit/);
+    assert.doesNotMatch(publishedPackageBlock, /evalid adoption validate --json/);
+    assert.doesNotMatch(publishedPackageBlock, /evalid package preflight/);
+    assert.doesNotMatch(publishedPackageBlock, /evalid package audit/);
 
     assert.match(readme, /docs\/quickstart\.md/);
   });
@@ -305,27 +305,27 @@ describe('competitive readiness benchmark', () => {
     const adoption = readFileSync(resolve(REPO_ROOT, 'docs', 'adoption', 'README.md'), 'utf8');
 
     for (const phrase of [
-      'Can xflow Beat Codex Native Goal?',
+      'Can evalid Beat Codex Native Goal?',
       'Codex goal = thread memory',
-      'xflow goal = project alignment evidence',
+      'evalid goal = project alignment evidence',
       'xflow:goal',
       'xflow:yolo',
       'xflow:corps',
       'Skill family',
-      'xflow goal audit --json',
-      'xflow corps --explain --json',
-      'xflow assess --json',
-      'xflow evaluate',
-      'xflow evaluate --json',
-      'xflow demo launch --json',
-      'xflow launch dossier',
-      'xflow launch audit --json',
-      'xflow launch audit --strict --json',
-      'xflow adoption kit --name <team-or-project> --source <tracker-or-pr> --track yolo',
-      'xflow adoption init --name <team-or-project> --source <tracker-or-pr> --track yolo',
-      'xflow adoption validate --json',
-      'xflow package preflight --check-registry --check-auth --json',
-      'xflow package audit --check-registry --json',
+      'evalid goal audit --json',
+      'evalid corps --explain --json',
+      'evalid assess --json',
+      'evalid evaluate',
+      'evalid evaluate --json',
+      'evalid demo launch --json',
+      'evalid launch dossier',
+      'evalid launch audit --json',
+      'evalid launch audit --strict --json',
+      'evalid adoption kit --name <team-or-project> --source <tracker-or-pr> --track yolo',
+      'evalid adoption init --name <team-or-project> --source <tracker-or-pr> --track yolo',
+      'evalid adoption validate --json',
+      'evalid package preflight --check-registry --check-auth --json',
+      'evalid package audit --check-registry --json',
       'npm run release:pack',
       'Completion Boundary',
       'npm_auth_and_publish',
@@ -335,15 +335,15 @@ describe('competitive readiness benchmark', () => {
       assert.match(assessment, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
 
-    assert.match(publicBenchmark, /xflow assess --json/);
-    assert.match(publicBenchmark, /xflow demo launch --json/);
-    assert.match(publicBenchmark, /xflow corps --explain --json/);
-    assert.match(publicBenchmark, /xflow launch dossier/);
-    assert.match(publicBenchmark, /xflow launch audit --strict --json/);
-    assert.match(publicBenchmark, /xflow launch audit --pre-publish --strict --json/);
-    assert.match(publicBenchmark, /xflow adoption validate --json/);
-    assert.match(publicBenchmark, /xflow package preflight --check-registry --check-auth --json/);
-    assert.match(publicBenchmark, /xflow package audit --check-registry --json/);
+    assert.match(publicBenchmark, /evalid assess --json/);
+    assert.match(publicBenchmark, /evalid demo launch --json/);
+    assert.match(publicBenchmark, /evalid corps --explain --json/);
+    assert.match(publicBenchmark, /evalid launch dossier/);
+    assert.match(publicBenchmark, /evalid launch audit --strict --json/);
+    assert.match(publicBenchmark, /evalid launch audit --pre-publish --strict --json/);
+    assert.match(publicBenchmark, /evalid adoption validate --json/);
+    assert.match(publicBenchmark, /evalid package preflight --check-registry --check-auth --json/);
+    assert.match(publicBenchmark, /evalid package audit --check-registry --json/);
     assert.match(publicBenchmark, /docs\/quality-assessment\.md/);
     assert.match(publicBenchmark, /docs\/launch-demo\.md/);
     assert.match(publicBenchmark, /docs\/launch-dossier\.md/);
@@ -351,12 +351,12 @@ describe('competitive readiness benchmark', () => {
     assert.match(publicBenchmark, /docs\/adoption\/README\.md/);
     assert.match(launchDemo, /goal -> yolo/);
     assert.match(launchDemo, /goal -> corps proof/);
-    assert.match(launchDemo, /xflow goal audit --json/);
+    assert.match(launchDemo, /evalid goal audit --json/);
     assert.match(launchDemo, /Why Goal Still Matters/);
     assert.match(adoption, /Required Shape/);
     assert.match(adoption, /Acceptance Bar/);
-    assert.match(adoption, /xflow adoption init/);
-    assert.match(adoption, /xflow adoption validate --json/);
+    assert.match(adoption, /evalid adoption init/);
+    assert.match(adoption, /evalid adoption validate --json/);
     assert.match(adoption, /splash-launch third-party evidence/);
     assert.match(adoption, /reviewable by someone outside the authoring/);
     assert.match(adoption, /docs\/adoption\/<team-or-project>\.md/);
@@ -384,7 +384,7 @@ describe('competitive readiness benchmark', () => {
       'PR Acceptance Checklist',
       'Failure Policy',
       '95 Percent Readiness Gate',
-      'xflow workflow validate corps --project-root .',
+      'evalid workflow validate corps --project-root .',
       'corps_proof.json',
       'primary_reference_surface',
     ]) {
@@ -409,7 +409,7 @@ describe('competitive readiness benchmark', () => {
       'OpenCode',
       'Gemini CLI',
       'Generic CLI Agents',
-      'xflow doctor --json',
+      'evalid doctor --json',
       'A5.archive.commit_push_close',
       'npm run skill:diff',
     ]) {
@@ -448,14 +448,14 @@ describe('competitive readiness benchmark', () => {
       'Publication Readiness',
       'npm install -g @surlymochan/evalid',
       'npm install -g .',
-      'xflow init --project-root .',
+      'evalid init --project-root .',
       'npm run release:local',
       'npm run release:pack',
       'npm run publish:check',
-      'xflow adoption validate --json',
-      'xflow package preflight --check-registry --check-auth --json',
-      'xflow launch audit --pre-publish --strict --json',
-      'xflow package audit --check-registry --json',
+      'evalid adoption validate --json',
+      'evalid package preflight --check-registry --check-auth --json',
+      'evalid launch audit --pre-publish --strict --json',
+      'evalid package audit --check-registry --json',
     ]) {
       assert.match(guide, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
@@ -464,7 +464,7 @@ describe('competitive readiness benchmark', () => {
       'npm Publish Handoff',
       'npm login',
       'npm publish --access public',
-      'xflow launch audit --pre-publish --strict --json',
+      'evalid launch audit --pre-publish --strict --json',
       'ENEEDAUTH',
     ]) {
       assert.match(publishHandoff, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
@@ -480,8 +480,8 @@ describe('competitive readiness benchmark', () => {
     for (const phrase of [
       'Clean Project Adoption',
       'npm install -g @surlymochan/evalid',
-      'xflow demo clean',
-      'xflow workflow validate yolo --project-root .',
+      'evalid demo clean',
+      'evalid workflow validate yolo --project-root .',
       'Source Checkout Release Proof',
       'npm run release:pack',
       'TDD Proof Demonstration',
@@ -489,14 +489,14 @@ describe('competitive readiness benchmark', () => {
       'green-0.json',
       'quality-0.json',
       'Competitive Claim Gate',
-      'xflow score',
-      'xflow goal audit --json',
-      'xflow corps --explain --json',
-      'xflow spec delta',
-      'xflow compare openspec',
-      'xflow compare spec-kit',
-      'xflow compare superpowers',
-      'xflow compare super-assistant',
+      'evalid score',
+      'evalid goal audit --json',
+      'evalid corps --explain --json',
+      'evalid spec delta',
+      'evalid compare openspec',
+      'evalid compare spec-kit',
+      'evalid compare superpowers',
+      'evalid compare super-assistant',
     ]) {
       assert.match(demoProof, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
@@ -509,12 +509,12 @@ describe('competitive readiness benchmark', () => {
     const readme = readFileSync(resolve(REPO_ROOT, 'xflow', 'README.md'), 'utf8');
 
     for (const phrase of [
-      'xflow spec openspec-map',
-      'xflow spec start',
+      'evalid spec openspec-map',
+      'evalid spec start',
       '.as-xflow/openspec-migration.json',
       '/opsx:new <change>',
       '/opsx:apply',
-      'xflow spec delta',
+      'evalid spec delta',
       'spec_delta_review.json',
       'openspec/changes/<id>/proposal.md',
       'specs/changes/<id>/plan.md',
@@ -539,13 +539,13 @@ describe('competitive readiness benchmark', () => {
 
     for (const phrase of [
       'npm run publish:check',
-      'xflow launch dossier --output docs/launch-dossier.md',
-      'xflow goal audit --json',
+      'evalid launch dossier --output docs/launch-dossier.md',
+      'evalid goal audit --json',
       'npm publish --dry-run --access public',
       'npm view @surlymochan/evalid name version --json',
-      'xflow package preflight --check-registry --check-auth --json',
-      'xflow launch audit --pre-publish --strict --json',
-      'xflow package audit --check-registry --json',
+      'evalid package preflight --check-registry --check-auth --json',
+      'evalid launch audit --pre-publish --strict --json',
+      'evalid package audit --check-registry --json',
       'available_surfaces',
       'ready_surfaces',
       'next_actions',
@@ -556,8 +556,8 @@ describe('competitive readiness benchmark', () => {
 
     for (const phrase of [
       'GitHub Issues',
-      'xflow adapter github-issue',
-      'xflow adapter import-file',
+      'evalid adapter github-issue',
+      'evalid adapter import-file',
       'Jira',
       'Linear',
       'Confluence',
@@ -572,27 +572,27 @@ describe('competitive readiness benchmark', () => {
 
     for (const phrase of [
       'Public Benchmark And Demo',
-      'xflow adapter import-file',
-      'xflow evaluate --json',
-      'xflow spec start --title "release proof adapter" --change-type backend',
+      'evalid adapter import-file',
+      'evalid evaluate --json',
+      'evalid spec start --title "release proof adapter" --change-type backend',
       'splash_claims',
-      'xflow launch dossier',
-      'xflow launch claims --json',
-      'xflow launch claims --splash --json',
-      'xflow launch copy --json',
-      'xflow launch copy --splash --json',
-      'xflow goal audit --json',
-      'xflow corps --explain --json',
-      'xflow adoption trial',
-      'xflow compare codex-goal',
-      'xflow compare superpowers',
-      'xflow compare super-assistant',
-      'xflow compare openspec',
-      'xflow compare spec-kit',
+      'evalid launch dossier',
+      'evalid launch claims --json',
+      'evalid launch claims --splash --json',
+      'evalid launch copy --json',
+      'evalid launch copy --splash --json',
+      'evalid goal audit --json',
+      'evalid corps --explain --json',
+      'evalid adoption trial',
+      'evalid compare codex-goal',
+      'evalid compare superpowers',
+      'evalid compare super-assistant',
+      'evalid compare openspec',
+      'evalid compare spec-kit',
       'npm run publish:check',
-      'xflow package preflight --check-registry --check-auth --json',
-      'xflow launch audit --pre-publish --strict --json',
-      'xflow launch audit --splash --strict --json',
+      'evalid package preflight --check-registry --check-auth --json',
+      'evalid launch audit --pre-publish --strict --json',
+      'evalid launch audit --splash --strict --json',
       'README badges',
       'RELEASE_NOTES.md',
       'docs/examples-gallery.md',
@@ -604,7 +604,7 @@ describe('competitive readiness benchmark', () => {
     const corpsGuide = readFileSync(resolve(REPO_ROOT, 'docs', 'corps-operator-guide.md'), 'utf8');
     for (const phrase of [
       'Corps Operator Guide',
-      'xflow corps --explain',
+      'evalid corps --explain',
       'First-Time Sequence',
       'Proof Contract',
       'Competitor-Led UI Inputs',
@@ -619,7 +619,7 @@ describe('competitive readiness benchmark', () => {
       '/speckit.plan',
       '/speckit.tasks',
       'requirements_delta',
-      'xflow compare spec-kit --json',
+      'evalid compare spec-kit --json',
     ]) {
       assert.match(specKitBenchmark, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
@@ -627,24 +627,24 @@ describe('competitive readiness benchmark', () => {
     for (const phrase of [
       'Examples Gallery',
       'Clean Project Adoption Smoke',
-      'xflow demo clean',
+      'evalid demo clean',
       'Goal To yolo',
       'Goal To corps Proof',
       'External Tracker Import',
       'Release Gate',
-      'xflow adapter import-file --input docs/fixtures/tracker-item.json --project-root .',
-      'xflow package preflight --check-registry --check-auth --json',
+      'evalid adapter import-file --input docs/fixtures/tracker-item.json --project-root .',
+      'evalid package preflight --check-registry --check-auth --json',
     ]) {
       assert.match(examplesGallery, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
 
     for (const phrase of [
-      'xflow compare codex-goal',
-      'xflow compare openspec',
-      'xflow compare spec-kit',
-      'xflow compare superpowers',
-      'xflow compare super-assistant',
-      'xflow adapter import-file',
+      'evalid compare codex-goal',
+      'evalid compare openspec',
+      'evalid compare spec-kit',
+      'evalid compare superpowers',
+      'evalid compare super-assistant',
+      'evalid adapter import-file',
       'npm run publish:check',
       'spec_delta_review.json',
     ]) {
@@ -682,15 +682,15 @@ describe('competitive readiness benchmark', () => {
     assert.match(launchDossier, /Adoption records: 1; status: pass/);
     assert.match(launchDossier, /Passing Evidence/);
     assert.match(launchDossier, /Available Checks/);
-    assert.match(launchDossier, /xflow adoption validate --json/);
+    assert.match(launchDossier, /evalid adoption validate --json/);
     assert.match(launchDossier, /Next Actions For Ordinary Launch/);
     assert.match(launchDossier, /verify_release_pack/);
-    assert.match(launchDossier, /xflow package audit --check-registry --json/);
+    assert.match(launchDossier, /evalid package audit --check-registry --json/);
     assert.match(launchDossier, /Next Actions For Splash Launch/);
     assert.match(launchDossier, /Missing Before Ordinary Launch/);
     assert.match(launchDossier, /Missing Before Splash Launch/);
     assert.match(launchDossier, /third_party_adoption/);
-    assert.match(launchDossier, /xflow launch audit --splash --strict --json/);
+    assert.match(launchDossier, /evalid launch audit --splash --strict --json/);
     assert.match(launchDossier, /published_package/);
     assert.doesNotMatch(launchDossier, /real_external_adoption/);
   });
@@ -702,16 +702,16 @@ describe('competitive readiness benchmark', () => {
 
     for (const phrase of [
       'npm install -g @surlymochan/evalid',
-      'xflow init --project-root .',
-      'xflow doctor --project-root .',
-      'xflow workflow validate yolo --project-root .',
+      'evalid init --project-root .',
+      'evalid doctor --project-root .',
+      'evalid workflow validate yolo --project-root .',
     ]) {
       assert.match(demoProof, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
 
     assert.match(ciWorkflow, /Minimal External Adoption Example/);
     assert.match(ciWorkflow, /cat > package\.json/);
-    assert.match(ciWorkflow, /xflow workflow validate yolo --project-root \./);
+    assert.match(ciWorkflow, /evalid workflow validate yolo --project-root \./);
 
     for (const phrase of [
       'OpenFlow release hardening',

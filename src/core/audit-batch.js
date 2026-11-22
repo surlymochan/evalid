@@ -313,7 +313,7 @@ function countCell(value) {
 
 /** Human-readable per-PR verdict table + summary. */
 export function renderBatchReport(batch) {
-  const lines = [`xflow audit --batch ${batch.slug}${batch.since ? ` --since ${batch.since}` : ''} (limit ${batch.limit})`];
+  const lines = [`evalid audit --batch ${batch.slug}${batch.since ? ` --since ${batch.since}` : ''} (limit ${batch.limit})`];
   if (batch.rows.length === 0) {
     lines.push('no merged PRs in window');
   } else {

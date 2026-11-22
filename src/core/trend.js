@@ -222,7 +222,7 @@ export function renderTrendReport(aggregation) {
     aggregation.total.samples,
   ]);
   const lines = [
-    `xflow trend — claimed vs replayed (${windowLabel})`,
+    `evalid trend — claimed vs replayed (${windowLabel})`,
     '',
     ...renderTable(
       ['repo', 'agent/model', 'claimed', 'replayed', 'delta', 'delta%', 'samples'],
