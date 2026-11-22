@@ -22,17 +22,21 @@ For a full run:
 xflow workflow run workflows/yolo.yaml --title "<中文标题>" --change-type backend
 ```
 
+Drive the run with one `workflow run` invocation per gate stop. Do not
+step atoms one by one: every atom-by-atom round trip re-reads the whole
+context, and the executor already runs each phase's atoms in one pass.
+
 When `--change-id` is omitted and the current branch cannot provide one
 (e.g. `main`), the run derives the change id from `--title` and prints it;
 pass `--change-id` explicitly to override.
 
 ## Plan reuse rule
 
-- Read `.xflow/GOAL.md` before execution when present. State whether the current
-  change aligns with it, intentionally narrows it, or conflicts with it.
-- Reuse `specs/changes/${CHANGE_ID}/plan.md` when it is current.
-- If the plan is missing or still a scaffold placeholder, create it once before continuing.
-- Planning stays track-neutral; do not decide yolo vs corps here.
+Planning rules (reuse, merged red-proof pass, boundaries) live in
+`xflow:plan` and are not restated here. The yolo-specific duty: read
+`.xflow/GOAL.md` before execution when present, and state in the final
+verification summary whether the change
+aligns with it, intentionally narrows it, or conflicts with it.
 
 ## State and context
 
@@ -56,6 +60,13 @@ pass `--change-id` explicitly to override.
 11. `verify-consistency`
 12. `archive`
 
+On the lite track, `brainstorm`, `proposal-freeze` and
+`proposal-consistency-check` are skipped as ceremony (`lite_skip` in the
+YAML): the proposal is scaffolded in `change-init` and consumed by `plan`
+directly, direction decisions happen inside the plan pass, and no
+human-gate stop is spent on brainstorm. The verification spine — tdd-red
+and tdd-green seals, I6d, J1, J6 — is unchanged on both tracks.
+
 On the lite track the red proof is sealed immediately after planning: the
 pass that writes the plan also writes the failing test, so `tdd-red` only
 runs and seals it — no second exploration pass, and the issue/branch
@@ -74,9 +85,7 @@ artifact checks. This skill only explains the contract.
 
 ## Guardrails
 
-- Keep the plan reusable and track-neutral
-- Do not introduce a separate tasks artifact
-- Do not re-plan if a current `plan.md` already exists
+- Planning rules live in `xflow:plan`; this skill does not restate them
 - Do not treat `.xflow/GOAL.md` as executable scope; it is alignment context
   that must be reflected in the final verification summary
 - Do not enter `set-in-progress` or `execute` unless doctor confirms the linked branch and checkout are ready

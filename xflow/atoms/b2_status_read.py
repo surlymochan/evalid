@@ -10,7 +10,10 @@ def main():
     p.add_argument('--change-id', required=True)
     args = p.parse_args()
     status = load_status(args.project_root, args.change_id)
-    print(json.dumps(status, indent=2))
+    # Compact separators: the full status value is unchanged for parsers,
+    # but this echo lands in the caller's context on every read (M18 #224
+    # lever A — B2b/B3 already print compact summaries for the same reason).
+    print(json.dumps(status, separators=(",", ":")))
 
 if __name__ == '__main__':
     main()

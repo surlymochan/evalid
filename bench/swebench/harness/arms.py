@@ -205,9 +205,11 @@ AGENTS_MD = """# OpenFlow project entry
 
 Use openflow as the workflow source of truth. The tooling matrix for this install is `{matrix}`
 (Generic CLI Agent row: `xflow assess --json`).
-Start with `xflow guide`, then run
-`xflow goal set "<project direction>" --project-root .`, `xflow doctor --project-root .`,
-`xflow goal audit --project-root . --json`, and `xflow workflow validate yolo --project-root .`.
+Start by running `xflow goal set "<project direction>" --project-root .` and
+`xflow workflow validate yolo --project-root .`, then go straight to planning.
+Do not run `xflow guide`, `xflow doctor`, or `xflow goal audit` up front: they are
+diagnostics for when setup looks wrong, not startup steps (M18 #224: the old
+five-command startup cost five round trips and five output reads before any work).
 For implementation, use `xflow:plan` first, then `xflow:yolo` or `xflow:corps`
 without re-planning. Preserve the split TDD order: tdd-red before execute,
 tdd-green after execute, with I6c quality proof.

@@ -818,6 +818,52 @@ describe('Heavy atoms', { concurrency: false }, () => {
     }
   });
 
+  // M18 slice 2 (#224) lever A: a large intake must enter the phase prompt
+  // as a reference, not as a full pretty-printed inline — its bytes were
+  // previously re-read on every agent turn of every phase.
+  test('agent_invoke prompt references a large intake instead of inlining it', async () => {
+    const projectRoot = makeProjectRoot();
+    try {
+      const changeDir = resolve(projectRoot, 'specs', 'changes', 'chg-intake');
+      mkdirSync(changeDir, { recursive: true });
+      const longSummary = 'intake-context-'.repeat(120);
+      writeFileSync(resolve(changeDir, 'intake.json'), JSON.stringify({
+        title: 'Fix widget rendering',
+        change_type: 'backend',
+        summary: longSummary,
+        constraints: ['no new deps'],
+      }, null, 2));
+      const result = await agentInvoke({}, {
+        workflow: { track: 'heavy' },
+        phase: {
+          id: 'explore',
+          label: '02 · Explore',
+          artifacts: [{ path: 'specs/changes/${change_id}/explore.json', optional: false }],
+        },
+        projectRoot,
+        changeId: 'chg-intake',
+        atomDef: {
+          id: 'I1.team.run',
+          ...registry.atoms['I1.team.run'],
+          agent_config: { adapter: 'stub' },
+        },
+        runtime: {},
+      });
+      assert.equal(result.ok, true);
+      const pendingTaskDir = resolve(projectRoot, '.as-xflow', 'pending-tasks');
+      const promptPath = resolve(
+        pendingTaskDir,
+        readdirSync(pendingTaskDir).find((entry) => entry.endsWith('.prompt.md')),
+      );
+      const prompt = readFileSync(promptPath, 'utf8');
+      assert.match(prompt, /Intake file: .*intake\.json \(\d+ bytes; full JSON intentionally not inlined\)/);
+      assert.match(prompt, /Top-level keys: title, change_type, summary, constraints/);
+      assert.ok(!prompt.includes(longSummary), 'the full intake body must not be inlined');
+    } finally {
+      cleanupProjectRoot(projectRoot);
+    }
+  });
+
   test('visualReview preserves QA review side effects for H5.visual.review', async () => {
     const projectRoot = makeProjectRoot();
     try {

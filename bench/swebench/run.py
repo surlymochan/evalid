@@ -17,6 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "harness"))
 import diff_filter as D  # noqa: E402
+import phase_usage as PU  # noqa: E402
 import predictions as P  # noqa: E402
 
 # swe_env and arms are imported inside main(), after the predictions-export
@@ -66,6 +67,7 @@ def cell(inst, arm, rep, out, stamp, raw_root, label, predictions_dir, predictio
     shutil.rmtree(events, ignore_errors=True)
     events.mkdir(parents=True)
     rec = {"instance_id": iid, "arm": arm, "rep": rep, "started": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "model": []}
+    phase_rows = []
     try:
         E.checkout(inst, repo)
         E.build_env(inst, repo, venv, events / "env.log")
@@ -131,10 +133,23 @@ def cell(inst, arm, rep, out, stamp, raw_root, label, predictions_dir, predictio
         with PREDICTION_LOCK:
             P.upsert_prediction(prediction_path, prediction)
         rec["prediction_file"] = prediction_path.name
+        # M18 slice 2 (#224): per-phase metering. While the repo (and the
+        # workflow execution log inside it) still exists, bucket the agent
+        # session's usage into workflow phases; the rows are appended next
+        # to the runs jsonl below, keyed by this cell's task id. Metering
+        # must never fail a cell: any problem leaves phase_rows empty.
+        try:
+            phase_rows = PU.cell_phase_rows(tid, iid, arm, rep, repo, events)
+        except Exception:
+            phase_rows = []
     except Exception as e:  # harness failure, not a model failure: recorded and excluded from n
         rec["harness_error"] = (str(e) + "\n" + traceback.format_exc())[-2000:]
     rec["finished"] = time.strftime("%Y-%m-%dT%H:%M:%S%z")
     with LOCK:
+        if phase_rows:
+            with open(PU.phases_path_for(Path(out)), "a") as f:
+                for row in phase_rows:
+                    f.write(json.dumps(row) + "\n")
         with open(out, "a") as f:
             f.write(json.dumps(rec) + "\n")
     shutil.rmtree(rundir, ignore_errors=True)
