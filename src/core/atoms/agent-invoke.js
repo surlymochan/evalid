@@ -254,12 +254,43 @@ function phaseSpecificGuidance(phaseId, expectedArtifact) {
   ]).join('\n');
 }
 
+const INTAKE_INLINE_LIMIT_BYTES = 1024;
+
 function loadIntake(changeDir) {
   const intakeFile = resolve(changeDir, 'intake.json');
-  if (existsSync(intakeFile)) {
-    try { return JSON.stringify(JSON.parse(readFileSync(intakeFile, 'utf8')), null, 2); } catch { /* */ }
+  if (!existsSync(intakeFile)) return '(no intake context available)';
+  let raw;
+  let parsed;
+  try {
+    raw = readFileSync(intakeFile, 'utf8');
+    parsed = JSON.parse(raw);
+  } catch {
+    return '(no intake context available)';
   }
-  return '(no intake context available)';
+  // M18 slice 2 (#224) lever A: the intake used to be inlined whole and
+  // pretty-printed into every phase prompt, so its full bytes were
+  // re-read on every agent turn of every phase. Small intakes now go in
+  // compact (single-line) form; larger ones go in as a reference — path,
+  // size, top-level keys and a scalar digest — and the phase reads the
+  // file itself only if it needs fields beyond the summary.
+  const compact = JSON.stringify(parsed);
+  if (Buffer.byteLength(compact, 'utf8') <= INTAKE_INLINE_LIMIT_BYTES) return compact;
+  const isRecord = parsed && typeof parsed === 'object' && !Array.isArray(parsed);
+  const keys = isRecord ? Object.keys(parsed) : [];
+  const scalars = {};
+  if (isRecord) {
+    for (const [key, value] of Object.entries(parsed)) {
+      if (value === null || ['string', 'number', 'boolean'].includes(typeof value)) {
+        scalars[key] = typeof value === 'string' && value.length > 80 ? `${value.slice(0, 80)}…` : value;
+      }
+    }
+  }
+  return [
+    `Intake file: ${intakeFile} (${Buffer.byteLength(raw, 'utf8')} bytes; full JSON intentionally not inlined).`,
+    `Top-level keys: ${keys.join(', ') || '(none)'}`,
+    `Scalar fields: ${JSON.stringify(scalars)}`,
+    'Read the intake file directly only if this phase needs fields beyond this summary.',
+  ].join('\n');
 }
 
 function resolveArtifactPath(artifacts, changeId, projectRoot) {
