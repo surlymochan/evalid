@@ -1,11 +1,11 @@
 # evalid Launch Demo
 
-Use this page when someone asks whether xflow goal is useful or whether yolo
+Use this page when someone asks whether evalid goal is useful or whether yolo
 and corps are only prompt wrappers.
 
 ## Demo Promise
 
-`xflow goal` is useful when it becomes the direction anchor for verified
+`evalid goal` is useful when it becomes the direction anchor for verified
 delivery, not when it acts as another chat reminder.
 
 The launch demo has two paths:
@@ -18,13 +18,13 @@ The launch demo has two paths:
 ## One-Minute Overview
 
 ```bash
-xflow guide
-xflow assess
-xflow demo launch
-xflow demo launch --json
-xflow corps --explain
-xflow launch audit
-xflow launch dossier
+evalid guide
+evalid assess
+evalid demo launch
+evalid demo launch --json
+evalid corps --explain
+evalid launch audit
+evalid launch dossier
 ```
 
 The JSON form is for agents and docs generators. The text form is for humans
@@ -33,11 +33,11 @@ reviewing the launch story.
 ## Path 1: Goal To Yolo
 
 ```bash
-xflow init --project-root .
-xflow goal set "Ship the next verified change" --project-root .
-xflow goal audit --project-root . --json
-xflow workflow validate yolo --project-root .
-xflow workflow run yolo --project-root . \
+evalid init --project-root .
+evalid goal set "Ship the next verified change" --project-root .
+evalid goal audit --project-root . --json
+evalid workflow validate yolo --project-root .
+evalid workflow run yolo --project-root . \
   --title "Example verified change" \
   --change-type backend \
   --tdd-red-command "npm test -- --grep new-behavior" \
@@ -47,7 +47,7 @@ xflow workflow run yolo --project-root . \
 Proof to inspect:
 
 - `.xflow/GOAL.md`
-- `xflow goal audit --json` showing yolo/corps/Ralph/handoff/takein consumption
+- `evalid goal audit --json` showing yolo/corps/Ralph/handoff/takein consumption
 - `specs/changes/<change-id>/tdd/red-0.json`
 - `specs/changes/<change-id>/tdd/green-0.json`
 - `specs/changes/<change-id>/tdd/quality-0.json`
@@ -56,10 +56,10 @@ Proof to inspect:
 ## Path 2: Goal To Corps Proof
 
 ```bash
-xflow goal show --json
-xflow goal audit --json
-xflow corps --explain --json
-xflow corps \
+evalid goal show --json
+evalid goal audit --json
+evalid corps --explain --json
+evalid corps \
   --title "Competitor-aligned workbench" \
   --change-type frontend \
   --change-id launch-corps-demo \
@@ -67,7 +67,7 @@ xflow corps \
   --reference-image refs/competitor-main.png \
   --dry-run \
   --json
-xflow proof --track corps --change-id launch-corps-demo
+evalid proof --track corps --change-id launch-corps-demo
 ```
 
 Proof to inspect:
@@ -80,43 +80,43 @@ Proof to inspect:
 
 ## Why Goal Still Matters
 
-Codex native goal is good thread memory. xflow goal is useful when it is project
+Codex native goal is good thread memory. evalid goal is useful when it is project
 memory plus workflow evidence. If a change cannot explain how it aligns with,
 narrows, or intentionally diverges from `.xflow/GOAL.md`, the goal has not done
 its job.
 
-That is why `xflow demo launch` includes both yolo and corps. The value is not
+That is why `evalid demo launch` includes both yolo and corps. The value is not
 the existence of a goal file; the value is that the file becomes a shared audit
 input for lightweight and heavyweight delivery.
 
-`xflow goal audit --json` is the machine-readable guard for that claim. It
+`evalid goal audit --json` is the machine-readable guard for that claim. It
 fails when the project has no durable goal or when the core skill family stops
 declaring `.xflow/GOAL.md` as an intake, handoff, or completion-audit input.
 
 ## Launch Readiness Audit
 
 ```bash
-xflow launch audit --strict --json
+evalid launch audit --strict --json
 ```
 
-This command is intentionally stricter than `xflow demo launch`. The demo proves
+This command is intentionally stricter than `evalid demo launch`. The demo proves
 the story is explainable. The launch audit says whether the story is ready to be
 promoted as an industry splash. In strict mode it exits non-zero until every
 launch surface is proven. It validates `docs/adoption/` before producing the
 missing-surface list, so a real adoption record removes the
 `real_external_adoption` gap automatically. Registry publication remains a
-separate launch gate checked through `xflow package preflight --check-registry
---check-auth --json` plus `xflow launch audit --pre-publish --strict --json`
-before publish, and `xflow package audit --check-registry --json` after publish.
+separate launch gate checked through `evalid package preflight --check-registry
+--check-auth --json` plus `evalid launch audit --pre-publish --strict --json`
+before publish, and `evalid package audit --check-registry --json` after publish.
 
-Use `xflow launch dossier` when you need the concise public-facing one-pager:
+Use `evalid launch dossier` when you need the concise public-facing one-pager:
 it summarizes the quality judgment, Codex native goal comparison, yolo/corps
 proof paths, release gate, and missing launch surfaces from the same audit
 payload.
 
 Use [docs/adoption/README.md](./adoption/README.md) when turning a real team or
 external project trial into reviewable launch evidence, then run
-`xflow adoption validate --json` before using that record in launch claims.
+`evalid adoption validate --json` before using that record in launch claims.
 
 Use [docs/corps-operator-guide.md](./corps-operator-guide.md) when the heavy
 track feels too large to start. It compresses corps into first-time commands,

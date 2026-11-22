@@ -32,8 +32,8 @@
 │  xflow:handoff  xflow:takein  xflow:lookback                │
 │  xflow:aha                                                   │
 └────────────────────────────┬────────────────────────────────────┘
-                             │  yolo: xflow workflow run <yaml>
-                             │  corps: xflow corps + xflow proof
+                             │  yolo: evalid workflow run <yaml>
+                             │  corps: evalid corps + evalid proof
 ┌────────────────────────────▼────────────────────────────────────┐
 │  L1  Workflow 定义                                              │
 │                                                                 │
@@ -150,7 +150,7 @@
 ### 调用
 
 ```bash
-CHANGE_ID=<id> xflow workflow run workflows/yolo.yaml
+CHANGE_ID=<id> evalid workflow run workflows/yolo.yaml
 ```
 
 ### Phase 流程图
@@ -167,7 +167,7 @@ CHANGE_ID=<id> xflow workflow run workflows/yolo.yaml
     ▼
 ┌──────────────────────┐
 │  03  brainstorm      │  atoms: B3 transition
-│  gate: human ⏸       │◄─── 等待 xflow gate ack brainstorm
+│  gate: human ⏸       │◄─── 等待 evalid gate ack brainstorm
 └──────────┬───────────┘
            │ ack
     ▼
@@ -215,7 +215,7 @@ CHANGE_ID=<id> xflow workflow run workflows/yolo.yaml
     ▼
 ┌──────────────────────┐
 │  22  execute         │  atoms: B3 transition
-│  gate: human ⏸       │◄─── 等待 xflow gate ack execute
+│  gate: human ⏸       │◄─── 等待 evalid gate ack execute
 └──────────┬───────────┘
            │ ack
     ▼
@@ -267,8 +267,8 @@ specs/changes/<change_id>/
 
 ```bash
 # 需要先启动 HTTP server
-xflow serve --port 8787 &
-CHANGE_ID=<id> xflow workflow run workflows/corps.yaml
+evalid serve --port 8787 &
+CHANGE_ID=<id> evalid workflow run workflows/corps.yaml
 ```
 
 ### Phase 流程图
@@ -483,7 +483,7 @@ specs/changes/<change_id>/
 │                     │                                                      │
 │  human              │  写 .as-xflow/pending-gates/<phase>.json              │
 │                     │  workflow 停止，等待人工 ack                           │
-│                     │  恢复：xflow gate ack <phase>                         │
+│                     │  恢复：evalid gate ack <phase>                         │
 │                     │  结果：approved（ack 后）/ pending（未 ack）            │
 └─────────────────────┴──────────────────────────────────────────────────────┘
 
@@ -507,14 +507,14 @@ on_fail 策略：
 
   用户检查后 ────────────────────────────────►
                                               │
-                               xflow gate ack <phase>
+                               evalid gate ack <phase>
                                               │
                                               ▼
                               .as-xflow/pending-gates/<phase>.json
                               { status: "approved" }
                                               │
   重新运行：                                   │
-  xflow workflow run <yaml> ◄─────────────────┘
+  evalid workflow run <yaml> ◄─────────────────┘
        │
        ▼
   executor 读 pending-gates/<phase>.json
@@ -639,7 +639,7 @@ J 管验证      K 管收尾归档
 │    │ J1 tests.run                 运行 plan.md 中的验证命令（lite）          │
 │    │ J4a spec_consistency.struct  确定性漂移扫描：impl vs proposal/specs    │
 │    │ J4b spec_delta.review        生成 proposal/plan/tasks/spec delta 摘要  │
-│    │ J4c openspec.migration_map   生成 OpenSpec → xflow 迁移映射报告       │
+│    │ J4c openspec.migration_map   生成 OpenSpec → evalid 迁移映射报告       │
 │    │ J5 gate.evidence_collect     收集证据包（heavy）                       │
 ├────┼──────────────────────────────────────────────────────────────────────┤
 │ K  │ Knit /        归档收尾：合并产物、持久化经验、关闭变更    lite    6      │
@@ -708,34 +708,34 @@ brainstorm ──► proposal-freeze ──► proposal-consistency-check
 ## 9. CLI 参考
 
 ```
-xflow workflow run <yaml>          运行 workflow（从当前或上次断点续）
-xflow workflow run <yaml> --dry-run  只解析打印，不执行
-xflow workflow validate <yaml>     校验 YAML schema + atom registry（只作 preflight）
-xflow corps --title <title>        corps 重型流程唯一执行入口（需带竞品/模块/主链路合同）
-xflow proof --track corps          校验执行日志 + artifacts，并写 corps_proof.json
-xflow gate ack <phase>             确认 human gate，允许 workflow 继续
-xflow atom list                    列出所有已注册原子
-xflow atom show <id>               显示原子详情（track/type/schema）
-xflow atom run <id> [--with ...]   单独执行一个原子
-xflow serve [--port 8787]          启动 HTTP server（corps 必须）
+evalid workflow run <yaml>          运行 workflow（从当前或上次断点续）
+evalid workflow run <yaml> --dry-run  只解析打印，不执行
+evalid workflow validate <yaml>     校验 YAML schema + atom registry（只作 preflight）
+evalid corps --title <title>        corps 重型流程唯一执行入口（需带竞品/模块/主链路合同）
+evalid proof --track corps          校验执行日志 + artifacts，并写 corps_proof.json
+evalid gate ack <phase>             确认 human gate，允许 workflow 继续
+evalid atom list                    列出所有已注册原子
+evalid atom show <id>               显示原子详情（track/type/schema）
+evalid atom run <id> [--with ...]   单独执行一个原子
+evalid serve [--port 8787]          启动 HTTP server（corps 必须）
 ```
 
 ### workflow run 常用参数
 
 ```bash
 # 基本
-CHANGE_ID=my-feature xflow workflow run workflows/yolo.yaml
+CHANGE_ID=my-feature evalid workflow run workflows/yolo.yaml
 
 # 使用独立 project root（测试/隔离场景）
-CHANGE_ID=my-feature XFLOW_PROJECT_ROOT=/path/to/project xflow workflow run workflows/yolo.yaml
+CHANGE_ID=my-feature XFLOW_PROJECT_ROOT=/path/to/project evalid workflow run workflows/yolo.yaml
 
 # corps（需要先启动 server）
-xflow serve &
-xflow corps --title "my feature" --change-type frontend --change-id my-feature
-xflow proof --track corps --change-id my-feature
+evalid serve &
+evalid corps --title "my feature" --change-type frontend --change-id my-feature
+evalid proof --track corps --change-id my-feature
 
 # 竞品复刻型 corps（benchmark contract 为正式二选一）
-xflow corps \
+evalid corps \
   --title "Competitor-aligned product workbench" \
   --change-type frontend \
   --change-id competitor-workbench \
@@ -752,7 +752,7 @@ xflow corps \
 
 # 或者改走 capture_url + reference_image 这条正式路径，
 # 让 H6.visual.benchmark 在 phase 内自动抓页面证据
-xflow corps \
+evalid corps \
   --title "Competitor-aligned product workbench" \
   --change-type frontend \
   --change-id competitor-workbench \
@@ -872,7 +872,7 @@ xflow corps \
 - 多视口 baseline：可用 `viewport_variants_json` 扩展 `capture_url` 路径，或声明 `benchmark_matrix_contract` 来要求多个 scenario / state variant 一起过线
 - 平台原生物理感：`visual_token_contract.required_platform_physics_profiles` 可要求 `ios_spring`、`android_ripple`、`mobile_h5_smooth`
 - richer semantic detection: `observed_visual_tokens.component_semantics` 现在可自动识别 `loading_state`、`skeleton_state`、`error_state`、`search_active`
-- HTML compare viewer: `H6.visual.benchmark` 会写 `visual_benchmark_report.html`；CLI 也可用 `xflow visual render-report` 或在 `capture-page-evidence` / `diff-images` 上加 `--report-output`
+- HTML compare viewer: `H6.visual.benchmark` 会写 `visual_benchmark_report.html`；CLI 也可用 `evalid visual render-report` 或在 `capture-page-evidence` / `diff-images` 上加 `--report-output`
 
 如果目标页面是典型工作台，而不是单一静态页，也可以补上：
 
@@ -975,7 +975,7 @@ xflow corps \
 如果已经有页面 DOM 快照 JSON，可以先用 CLI 导出 `dom_rects`：
 
 ```bash
-xflow visual export-dom-rects \
+evalid visual export-dom-rects \
   --project-root /path/to/project \
   --input fixtures/dom-snapshot.json \
   --output .as-xflow/dom-rects.json \
@@ -985,7 +985,7 @@ xflow visual export-dom-rects \
 也可以直接抓页面证据，再算真实图像差异：
 
 ```bash
-xflow visual capture-page-evidence \
+evalid visual capture-page-evidence \
   --url http://127.0.0.1:4174/ \
   --snapshot-output .as-xflow/page-snapshot.json \
   --screenshot-output output/playwright/page-evidence.png \
@@ -1003,7 +1003,7 @@ xflow visual capture-page-evidence \
 如果只想从已有 snapshot 单独导出视觉 token，可以用：
 
 ```bash
-xflow visual export-visual-tokens \
+evalid visual export-visual-tokens \
   --project-root /path/to/project \
   --input fixtures/dom-snapshot.json \
   --output .as-xflow/visual-tokens.json \
@@ -1013,7 +1013,7 @@ xflow visual export-visual-tokens \
 如果只想单独算图像差异，仍然可以用：
 
 ```bash
-xflow visual diff-images \
+evalid visual diff-images \
   --reference refs/competitor-main.png \
   --candidate output/playwright/page-evidence.png \
   --json
@@ -1025,7 +1025,7 @@ xflow visual diff-images \
 
 ## 10. 本地 Release Checklist
 
-本地 release 的目标是先证明仓库正确，再刷新安装版 `xflow` skill。不要直接手写 `SKILLHUB=... skills_sync.sh xflow`；使用仓库内受测入口，避免 prune 掉 as-skillhub 管理的其他 skills。
+本地 release 的目标是先证明仓库正确，再刷新安装版 `evalid` skill。不要直接手写 `SKILLHUB=... skills_sync.sh evalid`；使用仓库内受测入口，避免 prune 掉 as-skillhub 管理的其他 skills。
 
 ```bash
 npm run drift:scan
@@ -1165,7 +1165,7 @@ events.addEventListener('log', (message) => {
 ### CLI 进度输出
 
 ```bash
-CHANGE_ID=<id> xflow workflow run workflows/yolo.yaml --progress
+CHANGE_ID=<id> evalid workflow run workflows/yolo.yaml --progress
 ```
 
 `--progress` 是 opt-in 的：不加时终端输出与以前逐字节一致。开启后每 200ms 把新条目打印到 stderr（stdout 留给 workflow 自己的输出），例如：
@@ -1194,10 +1194,10 @@ CHANGE_ID=<id> xflow workflow run workflows/yolo.yaml --progress
 ls .as-xflow/pending-gates/
 
 # 确认 gate
-xflow gate ack <phase-id>
+evalid gate ack <phase-id>
 
 # 重新运行（从断点续）
-CHANGE_ID=<id> xflow workflow run workflows/yolo.yaml
+CHANGE_ID=<id> evalid workflow run workflows/yolo.yaml
 ```
 
 ### atom 报 `load_status()` 错误
@@ -1227,7 +1227,7 @@ ls specs/changes/<change_id>/
 并发测试时必须用独立的 `XFLOW_PROJECT_ROOT`：
 ```javascript
 const projectRoot = mkdtempSync(join(tmpdir(), 'xflow-test-'));
-spawnSync('node', ['bin/xflow.js', 'workflow', 'run', yaml], {
+spawnSync('node', ['bin/evalid.js', 'workflow', 'run', yaml], {
   env: { ...process.env, CHANGE_ID: 'test-1', XFLOW_PROJECT_ROOT: projectRoot }
 });
 ```

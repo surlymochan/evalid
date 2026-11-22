@@ -2,7 +2,7 @@
 
 Thanks for helping. evalid is an executable delivery workflow for AI
 coding agents: YAML phases made of small deterministic atoms, red/green TDD
-proof gates checked by code, and the `xflow` CLI. Contributions that keep
+proof gates checked by code, and the `evalid` CLI. Contributions that keep
 the gates deterministic — checked by code, not by prose — are the ones that
 fit this project best.
 
@@ -15,8 +15,8 @@ Python scripts).
 git clone https://github.com/surlymochan/evalid.git
 cd evalid
 npm ci && npm test          # full suite; each test file also runs standalone
-node bin/xflow.js quickstart
-node bin/xflow.js doctor --project-root .
+node bin/evalid.js quickstart
+node bin/evalid.js doctor --project-root .
 ```
 
 ## What a good PR looks like
@@ -49,7 +49,7 @@ exists for exactly that workflow. Please:
 
 ## Reporting bugs
 
-Open an issue with the template: include `xflow doctor --project-root .`
+Open an issue with the template: include `evalid doctor --project-root .`
 output, your Node/Python versions, and the smallest workflow or command
 that reproduces the problem. Security issues: please use GitHub's private
 vulnerability reporting instead of a public issue.

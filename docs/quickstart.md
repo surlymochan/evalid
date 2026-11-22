@@ -1,6 +1,6 @@
 # evalid Quickstart
 
-Use this path when you want a project to adopt xflow without reading the implementation first.
+Use this path when you want a project to adopt evalid without reading the implementation first.
 
 ## 0. See The Delivery Loop
 
@@ -8,13 +8,13 @@ Use the published package path when `evalid` is available from npm:
 
 ```bash
 npm install -g @surlymochan/evalid
-xflow quickstart
-xflow guide
-xflow evaluate
-xflow assess
-xflow demo clean
-xflow demo launch
-xflow launch dossier
+evalid quickstart
+evalid guide
+evalid evaluate
+evalid assess
+evalid demo clean
+evalid demo launch
+evalid launch dossier
 ```
 
 Use source checkout mode before npm publication:
@@ -24,12 +24,12 @@ git clone <repo-url> evalid
 cd evalid
 npm install
 npm run release:pack
-node bin/xflow.js quickstart
-node bin/xflow.js evaluate
-node bin/xflow.js assess
-node bin/xflow.js demo clean
-node bin/xflow.js compare codex-goal
-node bin/xflow.js launch dossier
+node bin/evalid.js quickstart
+node bin/evalid.js evaluate
+node bin/evalid.js assess
+node bin/evalid.js demo clean
+node bin/evalid.js compare codex-goal
+node bin/evalid.js launch dossier
 ```
 
 This shows the human-facing loop and the current quality scorecard for goal,
@@ -41,28 +41,28 @@ into a one-page public narrative.
 Release-owner checks are deliberately separate from this first-run path:
 
 ```bash
-xflow release status --json
-xflow adoption trial --name first-team --source first-tracker --track yolo
-xflow adoption kit --name first-team --source first-tracker --track yolo
-xflow adoption init --name first-team --source first-tracker --track yolo
-xflow adoption status --json
-xflow adoption validate --json
-xflow adoption validate --splash --json
-xflow package status --json
-xflow package preflight --check-registry --check-auth --json
-xflow launch audit --pre-publish --strict --json
-xflow launch audit --splash --strict --json
-xflow package audit --check-registry --json
+evalid release status --json
+evalid adoption trial --name first-team --source first-tracker --track yolo
+evalid adoption kit --name first-team --source first-tracker --track yolo
+evalid adoption init --name first-team --source first-tracker --track yolo
+evalid adoption status --json
+evalid adoption validate --json
+evalid adoption validate --splash --json
+evalid package status --json
+evalid package preflight --check-registry --check-auth --json
+evalid launch audit --pre-publish --strict --json
+evalid launch audit --splash --strict --json
+evalid package audit --check-registry --json
 ```
 
-`xflow adoption status` summarizes ordinary and splash adoption blockers without
-failing the release-owner checklist. `xflow adoption trial` previews the external team's copy-paste command sequence
-and evidence checklist without writing files. `xflow adoption kit` creates a
+`evalid adoption status` summarizes ordinary and splash adoption blockers without
+failing the release-owner checklist. `evalid adoption trial` previews the external team's copy-paste command sequence
+and evidence checklist without writing files. `evalid adoption kit` creates a
 shareable trial packet for an external project.
-`xflow adoption init` creates only a draft that must be filled from that real
-trial before `xflow adoption validate --json` can pass. Package preflight blocks
+`evalid adoption init` creates only a draft that must be filled from that real
+trial before `evalid adoption validate --json` can pass. Package preflight blocks
 the irreversible publish when npm identity or package availability is missing;
-`xflow package status --json` summarizes that package state without failing;
+`evalid package status --json` summarizes that package state without failing;
 package audit fails until the npm registry reports the expected public package
 name and version. Splash validation is stricter than ordinary adoption
 validation: it requires third-party adoption evidence beyond maintainer
@@ -71,9 +71,9 @@ dogfooding before broad ecosystem claims are allowed.
 ## 1. Initialize
 
 ```bash
-xflow init --project-root .
-xflow goal set "Ship the next verified change" --project-root .
-xflow goal audit --project-root . --json
+evalid init --project-root .
+evalid goal set "Ship the next verified change" --project-root .
+evalid goal audit --project-root . --json
 ```
 
 This writes `.as-xflow/config.json` with portable defaults for workflow paths, skill paths, and issue routing.
@@ -83,7 +83,7 @@ The goal command writes `.xflow/GOAL.md`, the project direction anchor consumed 
 ## 2. Check Readiness
 
 ```bash
-xflow doctor --project-root .
+evalid doctor --project-root .
 ```
 
 Doctor checks package scripts, workflow YAML validity, skill topology, and the project root used by execution.
@@ -91,30 +91,30 @@ Doctor checks package scripts, workflow YAML validity, skill topology, and the p
 ## 3. Validate The Lite Workflow
 
 ```bash
-xflow workflow validate yolo
+evalid workflow validate yolo
 ```
 
 Use `corps` instead of `yolo` when validating the heavy workflow.
-Validation is preflight only; run the heavy track through `xflow corps` and
-confirm final completion with `xflow proof --track corps`.
+Validation is preflight only; run the heavy track through `evalid corps` and
+confirm final completion with `evalid proof --track corps`.
 
 ## 4. Run A Lite Change
 
 ```bash
-xflow workflow run yolo --title "<中文标题>" --change-type backend \
+evalid workflow run yolo --title "<中文标题>" --change-type backend \
   --tdd-red-command "npm test -- --grep new-failing-case" \
   --tdd-green-command "npm test"
 ```
 
 For real project work, run this from a branch whose name can derive a `CHANGE_ID`, or pass `--change-id <id>`.
-The red command runs before implementation and must fail. After the execute step, the green command must pass, and xflow writes `quality-0.json` to prove code changes came with meaningful changed tests instead of empty assertions, snapshot-only tests, or mock-heavy smoke.
+The red command runs before implementation and must fail. After the execute step, the green command must pass, and evalid writes `quality-0.json` to prove code changes came with meaningful changed tests instead of empty assertions, snapshot-only tests, or mock-heavy smoke.
 
 ## 5. Run A Heavy Corps Change
 
 ```bash
-xflow serve &
-xflow corps --title "<产品标题>" --change-type frontend --change-id <id>
-xflow proof --track corps --change-id <id>
+evalid serve &
+evalid corps --title "<产品标题>" --change-type frontend --change-id <id>
+evalid proof --track corps --change-id <id>
 ```
 
 The conversation AI should not manually emulate `xflow:corps`; it clarifies
@@ -131,7 +131,7 @@ npm run verify
 npm run skill:sync
 npm run skill:diff
 npm run release:pack
-xflow host status --json
+evalid host status --json
 ```
 
 Use `npm run release:local` when you intentionally want verification followed by installed skill sync.
@@ -145,8 +145,8 @@ For a clean adoption example, use the minimal temporary project flow shown in [d
 Low-friction spec and QA helpers:
 
 ```bash
-xflow spec start --title "example change" --change-type backend
-xflow qa capture --url http://127.0.0.1:3000 --platform-profile mobile_h5
+evalid spec start --title "example change" --change-type backend
+evalid qa capture --url http://127.0.0.1:3000 --platform-profile mobile_h5
 ```
 
 ## Team Adoption

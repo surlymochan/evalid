@@ -11,22 +11,22 @@ npm install
 npm run doctor
 ```
 
-Use source checkout mode when developing xflow itself or when testing workflow changes before publishing.
+Use source checkout mode when developing evalid itself or when testing workflow changes before publishing.
 
 ## Global CLI
 
 ```bash
 npm install -g @surlymochan/evalid
-xflow doctor
+evalid doctor
 ```
 
-The package exposes `xflow` through `package.json` bin metadata.
+The package exposes `evalid` through `package.json` bin metadata.
 
 For local source checkout testing before publication:
 
 ```bash
 npm install -g .
-xflow doctor
+evalid doctor
 ```
 
 ## Project Adoption
@@ -34,9 +34,9 @@ xflow doctor
 Inside a project that will use xflow:
 
 ```bash
-xflow init --project-root .
-xflow doctor --project-root .
-xflow workflow validate yolo
+evalid init --project-root .
+evalid doctor --project-root .
+evalid workflow validate yolo
 ```
 
 This creates `.as-xflow/config.json` and verifies the local runtime before the first real workflow run.
@@ -49,10 +49,10 @@ npm run drift:scan
 npm run verify
 npm run skill:sync
 npm run skill:diff
-xflow host status --json
+evalid host status --json
 ```
 
-Use `npm run release:local` when a local release should verify the repo, run the drift scan, refresh the installed `xflow` skill, and confirm installed-skill drift is clean.
+Use `npm run release:local` when a local release should verify the repo, run the drift scan, refresh the installed `xflow` skill (the host skill keeps its original name), and confirm installed-skill drift is clean.
 
 By default, `npm run skill:sync` refreshes only the Codex installed skill root
 at `~/.codex/skills` so the local Codex surface stays canonical and duplicate
@@ -65,9 +65,9 @@ target list instead.
 If you want a host-level wrapper instead of remembering shell scripts, use:
 
 ```bash
-xflow host status --json
-xflow host sync
-xflow host diff
+evalid host status --json
+evalid host sync
+evalid host diff
 ```
 
 For package distribution readiness:
@@ -84,19 +84,19 @@ A release is not ready to publish unless all of these pass:
 
 ```bash
 npm run release:pack
-xflow score
-xflow goal audit --json
-xflow launch audit
-xflow launch audit --strict --json
-xflow adoption validate --json
-xflow package preflight --check-registry --check-auth --json
-xflow launch audit --pre-publish --strict --json
-xflow package audit --check-registry --json
-xflow compare superpowers
-xflow compare super-assistant
-xflow compare openspec
-xflow compare gstack
-xflow compare spec-kit
+evalid score
+evalid goal audit --json
+evalid launch audit
+evalid launch audit --strict --json
+evalid adoption validate --json
+evalid package preflight --check-registry --check-auth --json
+evalid launch audit --pre-publish --strict --json
+evalid package audit --check-registry --json
+evalid compare superpowers
+evalid compare super-assistant
+evalid compare openspec
+evalid compare gstack
+evalid compare spec-kit
 ```
 
 For public publication readiness, use:
@@ -106,10 +106,10 @@ npm run publish:check
 ```
 
 This adds `npm publish --dry-run --access public` after the local release-pack gate.
-Run `xflow package preflight --check-registry --check-auth --json` before the
+Run `evalid package preflight --check-registry --check-auth --json` before the
 real publish to confirm npm identity and package-name/version availability
 without mutating the registry.
-Run `xflow launch audit --pre-publish --strict --json` when you want the same
+Run `evalid launch audit --pre-publish --strict --json` when you want the same
 pre-publish package check combined with score and adoption evidence.
 
 The package dry-run must include `README.md`, `docs/`, `workflows/`, and `xflow/`, while excluding `test/`, local config, Python caches, and Finder metadata.
@@ -119,7 +119,7 @@ The package dry-run must include `README.md`, `docs/`, `workflows/`, and `xflow/
 After pulling or installing a newer version:
 
 ```bash
-xflow doctor
+evalid doctor
 npm run drift:scan
 npm run skill:diff
 npm run release:pack

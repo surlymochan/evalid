@@ -98,7 +98,7 @@ describe('active surface drift scan', () => {
     const registry = JSON.parse(readRepoFile('atoms/registry.json'));
     const atomCount = Object.keys(registry.atoms).length;
     const rootReadme = readRepoFile('xflow/README.md');
-    const cli = readRepoFile('bin/xflow.js');
+    const cli = readRepoFile('bin/evalid.js');
     const goalSkill = readRepoFile('xflow/goal/SKILL.md');
     const planSkill = readRepoFile('xflow/plan/SKILL.md');
     const corpsSkill = readRepoFile('xflow/corps/SKILL.md');
@@ -122,7 +122,7 @@ describe('active surface drift scan', () => {
     assert.match(cli, /case 'launch'/);
     assert.match(cli, /case 'adoption'/);
     assert.match(cli, /case 'package'/);
-    assert.match(cli, /xflow goal set/);
+    assert.match(cli, /evalid goal set/);
     assert.match(goalSkill, /Advantage Over Codex Native Goal/);
     assert.match(planSkill, /Do not produce `tasks\.md`/);
     assert.match(corpsSkill, /Planning is shared with\s+`xflow:plan`/);
@@ -136,8 +136,8 @@ describe('active surface drift scan', () => {
     assert.match(mergeWorkflowTemplate, /Capability Delta/);
     assert.match(takeinSkill, /npm run drift:scan/);
     assert.match(adoptionEvidence, /Acceptance Bar/);
-    assert.match(adoptionEvidence, /xflow adoption init/);
-    assert.match(adoptionEvidence, /xflow adoption validate --json/);
+    assert.match(adoptionEvidence, /evalid adoption init/);
+    assert.match(adoptionEvidence, /evalid adoption validate --json/);
     assert.match(compatibility, /`xmem` remains outside the xflow namespace/);
     assert.match(specsReadme, /`xflow:plan` only writes `plan\.md`/);
     assert.match(specsReadme, /findings\.md/);

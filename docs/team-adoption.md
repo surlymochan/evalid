@@ -8,7 +8,7 @@ proof path, one review surface, and one release boundary.
 
 | Level | Audience | Required Proof |
 | --- | --- | --- |
-| Pilot | one maintainer, one repository | `xflow doctor`, `xflow workflow validate yolo`, `npm run drift:scan` |
+| Pilot | one maintainer, one repository | `evalid doctor`, `evalid workflow validate yolo`, `npm run drift:scan` |
 | Team | 2-8 contributors | PR template requires workflow track, proof artifact, reviewer checklist, and drift evidence |
 | Organization | multiple repositories | CI runs adoption smoke, release pack, skill diff, and score checks before publishing claims |
 
@@ -32,7 +32,7 @@ evidence, but a human owner accepts public publication.
 Use `yolo` when the current conversation or a human implementer owns the work:
 
 ```bash
-xflow workflow run yolo --project-root . \
+evalid workflow run yolo --project-root . \
   --title "<change title>" \
   --change-type backend \
   --tdd-red-command "<failing command>" \
@@ -42,8 +42,8 @@ xflow workflow run yolo --project-root . \
 Use `corps` when the workflow runtime should own heavy product/design execution:
 
 ```bash
-xflow serve &
-xflow corps --project-root . \
+evalid serve &
+evalid corps --project-root . \
   --title "<product change>" \
   --change-type frontend \
   --change-id <id> \
@@ -51,7 +51,7 @@ xflow corps --project-root . \
   --target-surfaces primary_workspace \
   --primary-reference-surface primary_workspace \
   --reference-scenarios-json '<json>'
-xflow proof --track corps --change-id <id> --project-root .
+evalid proof --track corps --change-id <id> --project-root .
 ```
 
 `corps` completion is not accepted from screenshots, chat summaries, partial
@@ -70,19 +70,19 @@ npm test
 npm run drift:scan
 npm run skill:diff
 npm run release:pack
-xflow score --json
-xflow workflow validate yolo --project-root .
-xflow workflow validate corps --project-root .
+evalid score --json
+evalid workflow validate yolo --project-root .
+evalid workflow validate corps --project-root .
 ```
 
 For consumer projects that only install the CLI, keep a smaller adoption smoke:
 
 ```bash
 npm install -g @surlymochan/evalid
-xflow guide
-xflow init --project-root .
-xflow doctor --project-root .
-xflow workflow validate yolo --project-root .
+evalid guide
+evalid init --project-root .
+evalid doctor --project-root .
+evalid workflow validate yolo --project-root .
 ```
 
 ## PR Acceptance Checklist
@@ -112,7 +112,7 @@ A reviewer can accept a workflow-driven PR only when all of these are true:
 
 For public promotion, the project should satisfy all of these:
 
-- `xflow score --json` returns `ok=true` and every dimension is `strong`.
+- `evalid score --json` returns `ok=true` and every dimension is `strong`.
 - `npm run release:pack` passes from a clean source checkout.
 - CI includes the minimal external adoption example.
 - The reviewer guide and this team adoption model are linked from README.

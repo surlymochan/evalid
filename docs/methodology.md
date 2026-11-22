@@ -1,10 +1,10 @@
-# xflow Methodology
+# evalid Methodology
 
 Date: 2026-04-19
 
 ## Purpose
 
-xflow should feel like a guided delivery loop, not a bag of internal atoms. Operators should know what to do next even when they do not know the workflow internals.
+evalid should feel like a guided delivery loop, not a bag of internal atoms. Operators should know what to do next even when they do not know the workflow internals.
 
 The loop is:
 
@@ -12,7 +12,7 @@ The loop is:
 shape -> choose-track -> execute -> review -> finish
 ```
 
-Use `xflow guide` when you need the shortest reminder of this loop.
+Use `evalid guide` when you need the shortest reminder of this loop.
 
 ## 1. Shape The Work
 
@@ -57,8 +57,8 @@ Use `xflow:corps` when the change needs heavier coordination:
 CLI equivalents:
 
 ```bash
-xflow workflow validate yolo
-xflow workflow validate corps
+evalid workflow validate yolo
+evalid workflow validate corps
 ```
 
 `workflow validate` is preflight only. It must not be used as proof that
@@ -71,14 +71,14 @@ Goal: move work through deterministic phases while preserving evidence.
 Use:
 
 ```bash
-xflow workflow run yolo --title "<title>" --change-type backend
+evalid workflow run yolo --title "<title>" --change-type backend
 ```
 
 or:
 
 ```bash
-xflow corps --title "<title>" --change-type frontend --change-id <id>
-xflow proof --track corps --change-id <id>
+evalid corps --title "<title>" --change-type frontend --change-id <id>
+evalid proof --track corps --change-id <id>
 ```
 
 Expected artifacts:
@@ -107,7 +107,7 @@ Run:
 npm test
 npm run drift:scan
 npm run skill:diff
-xflow score
+evalid score
 ```
 
 Review:
@@ -136,7 +136,7 @@ Expected durable outputs:
 
 ## How This Beats Prompt-Only Workflows
 
-xflow does not rely on a remembered chat ritual. The methodology is backed by:
+evalid does not rely on a remembered chat ritual. The methodology is backed by:
 
 - executable YAML workflows
 - schema and registry tests
@@ -144,6 +144,6 @@ xflow does not rely on a remembered chat ritual. The methodology is backed by:
 - drift scans
 - installed skill sync checks
 - handoff and archive artifacts
-- `xflow score` evidence
+- `evalid score` evidence
 
 The result is a workflow that is understandable to humans and enforceable by tooling.

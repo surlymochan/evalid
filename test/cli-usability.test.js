@@ -251,12 +251,14 @@ function writeCompleteCorpsArtifacts(projectRoot, changeId, options = {}) {
 }
 
 describe('CLI usability', () => {
-  test('package bin exposes an executable xflow entrypoint', () => {
+  test('package bin exposes an executable evalid entrypoint (xflow kept as alias)', () => {
     const pkg = JSON.parse(readFileSync(resolve(REPO_ROOT, 'package.json'), 'utf8'));
-    const binPath = resolve(REPO_ROOT, pkg.bin.xflow);
+    const binPath = resolve(REPO_ROOT, pkg.bin.evalid);
 
-    assert.equal(pkg.bin.xflow, 'bin/xflow.js');
+    assert.equal(pkg.bin.evalid, 'bin/evalid.js');
     assert.notEqual(statSync(binPath).mode & 0o111, 0);
+    assert.equal(pkg.bin.xflow, 'bin/xflow.js');
+    assert.notEqual(statSync(resolve(REPO_ROOT, pkg.bin.xflow)).mode & 0o111, 0);
   });
 
   test('serve help exits without starting the HTTP server', () => {
@@ -267,7 +269,7 @@ describe('CLI usability', () => {
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /Usage: xflow serve/);
+    assert.match(result.stdout, /Usage: evalid serve/);
     assert.doesNotMatch(result.stdout, /server listening/i);
   });
 
@@ -279,7 +281,7 @@ describe('CLI usability', () => {
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /xflow doctor: ok/);
+    assert.match(result.stdout, /evalid doctor: ok/);
     assert.match(result.stdout, /workflow\.workflows\/yolo\.yaml/);
     assert.match(result.stdout, /skill\.no-root-skill/);
 
@@ -338,7 +340,7 @@ describe('CLI usability', () => {
         timeout: 3000,
       });
       assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-      assert.match(result.stdout, /xflow init: wrote/);
+      assert.match(result.stdout, /evalid init: wrote/);
     } finally {
       cleanupProjectRoot(projectRoot);
     }
@@ -1397,7 +1399,7 @@ describe('CLI usability', () => {
     const payload = JSON.parse(result.stdout);
     assert.equal(payload.ok, true);
     assert.equal(payload.mode, 'operator_guide');
-    assert.ok(payload.first_time_sequence.includes('xflow goal audit --json'));
+    assert.ok(payload.first_time_sequence.includes('evalid goal audit --json'));
     assert.ok(payload.first_time_sequence.some((command) => command.includes('--dry-run --json')));
     assert.ok(payload.proof_contract.some((item) => item.includes('corps_proof.json')));
     assert.equal(payload.competitor_led_inputs.rule, 'competitor-led UI requires a primary reference surface and exactly one benchmark evidence path before execution');
@@ -2244,12 +2246,12 @@ phases:
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /xflow score: 100\/100/);
+    assert.match(result.stdout, /evalid score: 100\/100/);
     assert.match(result.stdout, /Cross-tool portability/);
     assert.match(result.stdout, /Boundary: internal competitive readiness only/);
     assert.match(result.stdout, /Publish ready: not yet/);
     assert.match(result.stdout, /Release gates: published_package/);
-    assert.match(result.stdout, /Check: xflow release status --json/);
+    assert.match(result.stdout, /Check: evalid release status --json/);
 
     result = spawnSync('node', ['bin/xflow.js', 'score', '--json'], {
       cwd: REPO_ROOT,
@@ -2262,7 +2264,7 @@ phases:
     assert.equal(payload.ok, true);
     assert.equal(payload.score, 100);
     assert.equal(payload.scope, 'competitive_internal_readiness');
-    assert.equal(payload.boundary.release_status_command, 'xflow release status --json');
+    assert.equal(payload.boundary.release_status_command, 'evalid release status --json');
     assert.equal(payload.boundary.ready_for_publish, false);
     assert.equal(payload.boundary.ready_for_splash, false);
     assert.deepEqual(payload.boundary.blocking_surfaces, ['published_package', 'third_party_adoption']);
@@ -2280,7 +2282,7 @@ phases:
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /xflow quality assessment/);
+    assert.match(result.stdout, /evalid quality assessment/);
     assert.match(result.stdout, /Codex goal comparison/);
     assert.match(result.stdout, /xflow:goal/);
     assert.match(result.stdout, /xflow:yolo/);
@@ -2319,13 +2321,13 @@ phases:
     assert.deepEqual(payload.objective_audit.find((item) => item.id === 'industry_splash').blockers, ['published_package', 'third_party_adoption']);
     assert.ok(payload.scorecard.some((item) => item.surface === 'xflow:goal' && item.grade === 'A'));
     assert.ok(payload.docs.includes('docs/quality-assessment.md'));
-    assert.ok(payload.proof_commands.includes('xflow goal audit --json'));
-    assert.ok(payload.proof_commands.includes('xflow launch audit --pre-publish --strict --json'));
-    assert.ok(payload.proof_commands.includes('xflow adoption validate --splash --json'));
-    assert.ok(payload.proof_commands.includes('xflow launch audit --splash --strict --json'));
+    assert.ok(payload.proof_commands.includes('evalid goal audit --json'));
+    assert.ok(payload.proof_commands.includes('evalid launch audit --pre-publish --strict --json'));
+    assert.ok(payload.proof_commands.includes('evalid adoption validate --splash --json'));
+    assert.ok(payload.proof_commands.includes('evalid launch audit --splash --strict --json'));
     assert.ok(payload.proof_commands.includes('npm run release:pack'));
     assert.equal(payload.completion_boundary.internal_quality, 'ready');
-    assert.equal(payload.completion_boundary.codex_goal_comparison, 'proven at the project layer when xflow goal audit passes');
+    assert.equal(payload.completion_boundary.codex_goal_comparison, 'proven at the project layer when evalid goal audit passes');
     assert.ok(payload.completion_boundary.external_blockers.some((item) => item.id === 'npm_auth_and_publish'));
     assert.ok(payload.completion_boundary.external_blockers.some((item) => item.id === 'third_party_adoption'));
   });
@@ -2338,7 +2340,7 @@ phases:
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /xflow evaluate/);
+    assert.match(result.stdout, /evalid evaluate/);
     assert.match(result.stdout, /Recommended path: source_checkout/);
     assert.match(result.stdout, /Readiness: source_checkout=ready; open_source_launch=blocked; industry_splash=blocked/);
     assert.match(result.stdout, /Objective audit: goal_vs_codex=proven_project_layer; yolo_delivery=proven_from_source; corps_delivery=proven_from_source/);
@@ -2416,23 +2418,23 @@ phases:
     assert.equal(payload.competitive.super_assistant.target, 'super-assistant');
     assert.ok(payload.competitive.super_assistant.target_edges.some((edge) => edge.includes('enterprise harness')));
     assert.ok(payload.quickstart.source_checkout.commands.includes('npm run release:pack'));
-    assert.ok(payload.quickstart.release_owner_gates.commands.includes('xflow release status --json'));
-    assert.ok(payload.quickstart.release_owner_gates.commands.includes('xflow adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo'));
-    assert.ok(payload.quickstart.release_owner_gates.commands.includes('xflow adoption kit --name <team-or-project> --source <tracker-or-pr> --track yolo'));
-    assert.ok(payload.quickstart.release_owner_gates.commands.includes('xflow adoption status --json'));
-    assert.ok(payload.quickstart.release_owner_gates.commands.includes('xflow adoption validate --splash --json'));
-    assert.ok(payload.quickstart.release_owner_gates.commands.includes('xflow package status --json'));
-    assert.ok(payload.quickstart.release_owner_gates.commands.includes('xflow launch audit --splash --strict --json'));
-    assert.ok(payload.proof_commands.includes('xflow evaluate --json'));
-    assert.ok(payload.proof_commands.includes('xflow release status --json'));
-    assert.ok(payload.proof_commands.includes('xflow compare codex-goal --json'));
-    assert.ok(payload.proof_commands.includes('xflow compare superpowers --json'));
-    assert.ok(payload.proof_commands.includes('xflow compare super-assistant --json'));
-    assert.ok(payload.proof_commands.includes('xflow adoption status --json'));
-    assert.ok(payload.proof_commands.includes('xflow package status --json'));
-    assert.ok(payload.proof_commands.includes('xflow adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo --json'));
-    assert.ok(payload.proof_commands.includes('xflow adoption validate --splash --json'));
-    assert.ok(payload.proof_commands.includes('xflow launch audit --splash --strict --json'));
+    assert.ok(payload.quickstart.release_owner_gates.commands.includes('evalid release status --json'));
+    assert.ok(payload.quickstart.release_owner_gates.commands.includes('evalid adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo'));
+    assert.ok(payload.quickstart.release_owner_gates.commands.includes('evalid adoption kit --name <team-or-project> --source <tracker-or-pr> --track yolo'));
+    assert.ok(payload.quickstart.release_owner_gates.commands.includes('evalid adoption status --json'));
+    assert.ok(payload.quickstart.release_owner_gates.commands.includes('evalid adoption validate --splash --json'));
+    assert.ok(payload.quickstart.release_owner_gates.commands.includes('evalid package status --json'));
+    assert.ok(payload.quickstart.release_owner_gates.commands.includes('evalid launch audit --splash --strict --json'));
+    assert.ok(payload.proof_commands.includes('evalid evaluate --json'));
+    assert.ok(payload.proof_commands.includes('evalid release status --json'));
+    assert.ok(payload.proof_commands.includes('evalid compare codex-goal --json'));
+    assert.ok(payload.proof_commands.includes('evalid compare superpowers --json'));
+    assert.ok(payload.proof_commands.includes('evalid compare super-assistant --json'));
+    assert.ok(payload.proof_commands.includes('evalid adoption status --json'));
+    assert.ok(payload.proof_commands.includes('evalid package status --json'));
+    assert.ok(payload.proof_commands.includes('evalid adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo --json'));
+    assert.ok(payload.proof_commands.includes('evalid adoption validate --splash --json'));
+    assert.ok(payload.proof_commands.includes('evalid launch audit --splash --strict --json'));
   });
 
   test('objective reports top-level product objective status in text and json modes', () => {
@@ -2443,7 +2445,7 @@ phases:
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /xflow objective audit/);
+    assert.match(result.stdout, /evalid objective audit/);
     assert.match(result.stdout, /goal_vs_codex: proven_project_layer/);
     assert.match(result.stdout, /yolo_delivery: proven_from_source/);
     assert.match(result.stdout, /corps_delivery: proven_from_source/);
@@ -2469,7 +2471,7 @@ phases:
     assert.equal(payload.release_owner.ready_for_publish, false);
     assert.equal(payload.release_owner.ready_for_splash, false);
     assert.equal(payload.release_owner.next_action.id, 'verify_release_pack');
-    assert.ok(payload.proof_commands.includes('xflow objective --json'));
+    assert.ok(payload.proof_commands.includes('evalid objective --json'));
   });
 
   test('evaluate surfaces pre-publish package owner actions', () => {
@@ -2509,12 +2511,12 @@ phases:
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /xflow release status/);
+    assert.match(result.stdout, /evalid release status/);
     assert.match(result.stdout, /Publish ready: not yet/);
     assert.match(result.stdout, /Blocking surface: published_package/);
     assert.match(result.stdout, /Blocking surfaces: published_package, third_party_adoption/);
     assert.match(result.stdout, /Next action: verify_release_pack: npm run release:pack/);
-    assert.match(result.stdout, /External trial: xflow adoption trial --name <third-party-project> --source <public-pr-or-external-repo> --track yolo/);
+    assert.match(result.stdout, /External trial: evalid adoption trial --name <third-party-project> --source <public-pr-or-external-repo> --track yolo/);
     assert.match(result.stdout, /Handoff: docs\/npm-publish-handoff.md/);
 
     result = spawnSync('node', ['bin/xflow.js', 'release', 'status', '--json'], {
@@ -2529,7 +2531,7 @@ phases:
     assert.equal(payload.release_owner.blocking_surface, 'published_package');
     assert.deepEqual(payload.release_owner.blocking_surfaces, ['published_package', 'third_party_adoption']);
     assert.equal(payload.release_owner.next_action.id, 'verify_release_pack');
-    assert.equal(payload.release_owner.external_trial_command, 'xflow adoption trial --name <third-party-project> --source <public-pr-or-external-repo> --track yolo');
+    assert.equal(payload.release_owner.external_trial_command, 'evalid adoption trial --name <third-party-project> --source <public-pr-or-external-repo> --track yolo');
     assert.equal(payload.release_owner.handoff_doc, 'docs/npm-publish-handoff.md');
 
     const registryNotFound = JSON.stringify({ error: 'E404' });
@@ -2582,7 +2584,7 @@ phases:
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /xflow demo clean/);
+    assert.match(result.stdout, /evalid demo clean/);
     assert.match(result.stdout, /Status: pass/);
     assert.match(result.stdout, /validate_yolo/);
 
@@ -2613,13 +2615,13 @@ phases:
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /xflow launch audit/);
+    assert.match(result.stdout, /evalid launch audit/);
     assert.match(result.stdout, /Launch ready: not yet/);
     assert.match(result.stdout, /Passing evidence/);
     assert.match(result.stdout, /Available checks/);
     assert.match(result.stdout, /published_package/);
     assert.match(result.stdout, /Next actions/);
-    assert.match(result.stdout, /xflow package audit --check-registry --json/);
+    assert.match(result.stdout, /evalid package audit --check-registry --json/);
     assert.doesNotMatch(result.stdout, /real_external_adoption/);
 
     result = spawnSync('node', ['bin/xflow.js', 'launch', 'audit', '--json'], {
@@ -2644,42 +2646,42 @@ phases:
     assert.equal(payload.missing_surfaces.some((item) => item.id === 'real_external_adoption'), false);
     assert.ok(payload.missing_surfaces.some((item) => item.id === 'published_package'));
     assert.ok(payload.available_surfaces.includes('npm run publish:check'));
-    assert.ok(payload.available_surfaces.includes('xflow evaluate --json'));
-    assert.ok(payload.available_surfaces.includes('xflow release status --json'));
-    assert.ok(payload.available_surfaces.includes('xflow adoption status --json'));
-    assert.ok(payload.available_surfaces.includes('xflow package status --json'));
-    assert.ok(payload.available_surfaces.includes('xflow launch claims --json'));
-    assert.ok(payload.available_surfaces.includes('xflow launch copy --json'));
-    assert.ok(payload.available_surfaces.includes('xflow package preflight --check-registry --check-auth --json'));
-    assert.ok(payload.available_surfaces.includes('xflow package audit --check-registry --json'));
-    assert.ok(payload.ready_surfaces.includes('xflow assess --json'));
-    assert.ok(payload.ready_surfaces.includes('xflow score --json'));
-    assert.ok(payload.ready_surfaces.includes('xflow goal audit --json'));
-    assert.ok(payload.ready_surfaces.includes('xflow adoption validate --json'));
-    assert.equal(payload.ready_surfaces.includes('xflow package preflight --check-registry --check-auth --json'), false);
-    assert.equal(payload.ready_surfaces.includes('xflow package audit --check-registry --json'), false);
-    assert.equal(payload.ready_surfaces.includes('xflow launch audit --splash --strict --json'), false);
+    assert.ok(payload.available_surfaces.includes('evalid evaluate --json'));
+    assert.ok(payload.available_surfaces.includes('evalid release status --json'));
+    assert.ok(payload.available_surfaces.includes('evalid adoption status --json'));
+    assert.ok(payload.available_surfaces.includes('evalid package status --json'));
+    assert.ok(payload.available_surfaces.includes('evalid launch claims --json'));
+    assert.ok(payload.available_surfaces.includes('evalid launch copy --json'));
+    assert.ok(payload.available_surfaces.includes('evalid package preflight --check-registry --check-auth --json'));
+    assert.ok(payload.available_surfaces.includes('evalid package audit --check-registry --json'));
+    assert.ok(payload.ready_surfaces.includes('evalid assess --json'));
+    assert.ok(payload.ready_surfaces.includes('evalid score --json'));
+    assert.ok(payload.ready_surfaces.includes('evalid goal audit --json'));
+    assert.ok(payload.ready_surfaces.includes('evalid adoption validate --json'));
+    assert.equal(payload.ready_surfaces.includes('evalid package preflight --check-registry --check-auth --json'), false);
+    assert.equal(payload.ready_surfaces.includes('evalid package audit --check-registry --json'), false);
+    assert.equal(payload.ready_surfaces.includes('evalid launch audit --splash --strict --json'), false);
     assert.ok(payload.docs.includes('docs/adoption/README.md'));
     assert.ok(payload.docs.includes('docs/launch-dossier.md'));
     assert.ok(payload.docs.includes('docs/examples-gallery.md'));
-    assert.ok(payload.release_gate.includes('xflow adoption validate --json'));
-    assert.ok(payload.release_gate.includes('xflow evaluate --json'));
-    assert.ok(payload.release_gate.includes('xflow release status --json'));
-    assert.ok(payload.release_gate.includes('xflow adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo --json'));
-    assert.ok(payload.release_gate.includes('xflow goal audit --json'));
-    assert.ok(payload.release_gate.includes('xflow adoption status --json'));
-    assert.ok(payload.release_gate.includes('xflow launch claims --json'));
-    assert.ok(payload.release_gate.includes('xflow launch copy --json'));
-    assert.ok(payload.release_gate.includes('xflow package status --json'));
-    assert.ok(payload.release_gate.includes('xflow package preflight --check-registry --check-auth --json'));
-    assert.ok(payload.release_gate.includes('xflow launch audit --strict --json'));
-    assert.ok(payload.release_gate.includes('xflow launch audit --splash --strict --json'));
+    assert.ok(payload.release_gate.includes('evalid adoption validate --json'));
+    assert.ok(payload.release_gate.includes('evalid evaluate --json'));
+    assert.ok(payload.release_gate.includes('evalid release status --json'));
+    assert.ok(payload.release_gate.includes('evalid adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo --json'));
+    assert.ok(payload.release_gate.includes('evalid goal audit --json'));
+    assert.ok(payload.release_gate.includes('evalid adoption status --json'));
+    assert.ok(payload.release_gate.includes('evalid launch claims --json'));
+    assert.ok(payload.release_gate.includes('evalid launch copy --json'));
+    assert.ok(payload.release_gate.includes('evalid package status --json'));
+    assert.ok(payload.release_gate.includes('evalid package preflight --check-registry --check-auth --json'));
+    assert.ok(payload.release_gate.includes('evalid launch audit --strict --json'));
+    assert.ok(payload.release_gate.includes('evalid launch audit --splash --strict --json'));
     assert.ok(payload.next_actions.some((item) => item.id === 'publish_package'));
     assert.ok(payload.next_actions.some((item) => item.command === 'npm run release:pack'));
-    assert.ok(payload.next_actions.some((item) => item.command === 'xflow package preflight --check-registry --check-auth --json'));
-    assert.ok(payload.next_actions.some((item) => item.command === 'xflow launch audit --pre-publish --strict --json'));
-    assert.ok(payload.next_actions.some((item) => item.command === 'xflow package audit --check-registry --json'));
-    assert.ok(payload.next_actions.some((item) => item.command === 'xflow launch audit --strict --json'));
+    assert.ok(payload.next_actions.some((item) => item.command === 'evalid package preflight --check-registry --check-auth --json'));
+    assert.ok(payload.next_actions.some((item) => item.command === 'evalid launch audit --pre-publish --strict --json'));
+    assert.ok(payload.next_actions.some((item) => item.command === 'evalid package audit --check-registry --json'));
+    assert.ok(payload.next_actions.some((item) => item.command === 'evalid launch audit --strict --json'));
 
     result = spawnSync('node', ['bin/xflow.js', 'launch', 'audit', '--splash', '--json'], {
       cwd: REPO_ROOT,
@@ -2718,7 +2720,7 @@ phases:
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /xflow launch claims/);
+    assert.match(result.stdout, /evalid launch claims/);
     assert.match(result.stdout, /Allowed public claims/);
     assert.match(result.stdout, /Hold these claims/);
     assert.match(result.stdout, /published_package/);
@@ -2793,9 +2795,9 @@ phases:
     assert.ok(payload.proof_points.some((item) => item.id === 'project_goal_beats_thread_goal'));
     assert.ok(payload.hold_until_evidence.some((item) => item.id === 'published_package'));
     assert.ok(payload.forbidden_phrases.includes('npm install -g @surlymochan/evalid works now'));
-    assert.ok(payload.evidence_commands.includes('xflow evaluate --json'));
-    assert.ok(payload.evidence_commands.includes('xflow launch claims --json'));
-    assert.ok(payload.evidence_commands.includes('xflow launch copy --json'));
+    assert.ok(payload.evidence_commands.includes('evalid evaluate --json'));
+    assert.ok(payload.evidence_commands.includes('evalid launch claims --json'));
+    assert.ok(payload.evidence_commands.includes('evalid launch copy --json'));
 
     result = spawnSync('node', ['bin/xflow.js', 'launch', 'copy', '--splash', '--json'], {
       cwd: REPO_ROOT,
@@ -2807,9 +2809,9 @@ phases:
     const splashCopyPayload = JSON.parse(result.stdout);
     assert.equal(splashCopyPayload.splash, true);
     assert.equal(splashCopyPayload.hold_until_evidence.some((item) => item.id === 'third_party_adoption'), true);
-    assert.ok(splashCopyPayload.evidence_commands.includes('xflow launch claims --splash --json'));
-    assert.ok(splashCopyPayload.evidence_commands.includes('xflow launch copy --splash --json'));
-    assert.ok(splashCopyPayload.evidence_commands.includes('xflow launch audit --splash --strict --json'));
+    assert.ok(splashCopyPayload.evidence_commands.includes('evalid launch claims --splash --json'));
+    assert.ok(splashCopyPayload.evidence_commands.includes('evalid launch copy --splash --json'));
+    assert.ok(splashCopyPayload.evidence_commands.includes('evalid launch audit --splash --strict --json'));
 
     result = spawnSync('node', ['bin/xflow.js', 'launch', 'copy', '--strict', '--json'], {
       cwd: REPO_ROOT,
@@ -2850,7 +2852,7 @@ phases:
       assert.match(payload.dossier, /evalid Launch Dossier/);
       assert.match(payload.dossier, /Codex native goal comparison/);
       assert.match(payload.dossier, /xflow:goal/);
-      assert.match(payload.dossier, /xflow goal audit --json/);
+      assert.match(payload.dossier, /evalid goal audit --json/);
       assert.match(payload.dossier, /Goal to yolo/);
       assert.match(payload.dossier, /Goal to corps proof/);
       assert.match(payload.dossier, /Runnable Examples/);
@@ -2876,7 +2878,7 @@ phases:
       });
 
       assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-      assert.match(result.stdout, /xflow launch dossier: wrote/);
+      assert.match(result.stdout, /evalid launch dossier: wrote/);
       assert.match(readFileSync(outputPath, 'utf8'), /Release Gate/);
       assert.match(readFileSync(outputPath, 'utf8'), /docs\/examples-gallery\.md/);
 
@@ -2892,7 +2894,7 @@ phases:
       });
 
       assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-      assert.match(result.stdout, /Usage: xflow launch/);
+      assert.match(result.stdout, /Usage: evalid launch/);
       assert.doesNotMatch(result.stdout, /evalid Launch Dossier/);
     } finally {
       cleanupProjectRoot(projectRoot);
@@ -2933,9 +2935,9 @@ Keep the package installable while removing stale workflow instructions.
 ## Commands
 
 \`\`\`bash
-xflow goal show --json
-xflow assess --json
-xflow workflow validate yolo --project-root .
+evalid goal show --json
+evalid assess --json
+evalid workflow validate yolo --project-root .
 \`\`\`
 
 ## Evidence
@@ -2994,8 +2996,8 @@ Repository names were sanitized.
       assert.equal(prePublishPayload.package_evidence.ok, true);
       assert.equal(prePublishPayload.package_evidence.npm_identity, 'codex');
       assert.equal(prePublishPayload.package_evidence.registry_status, 'available');
-      assert.ok(prePublishPayload.ready_surfaces.includes('xflow package preflight --check-registry --check-auth --json'));
-      assert.ok(prePublishPayload.ready_surfaces.includes('xflow launch audit --pre-publish --strict --json'));
+      assert.ok(prePublishPayload.ready_surfaces.includes('evalid package preflight --check-registry --check-auth --json'));
+      assert.ok(prePublishPayload.ready_surfaces.includes('evalid launch audit --pre-publish --strict --json'));
 
       const fakeBin = resolve(projectRoot, 'fake-bin');
       mkdirSync(fakeBin, { recursive: true });
@@ -3071,8 +3073,8 @@ Repository names were sanitized.
       assert.equal(readyPayload.package_evidence.ok, true);
       assert.equal(readyPayload.package_evidence.registry_version, '0.1.0');
       assert.equal(readyPayload.missing_surfaces.length, 0);
-      assert.ok(readyPayload.ready_surfaces.includes('xflow package audit --check-registry --json'));
-      assert.ok(readyPayload.ready_surfaces.includes('xflow launch audit --strict --json'));
+      assert.ok(readyPayload.ready_surfaces.includes('evalid package audit --check-registry --json'));
+      assert.ok(readyPayload.ready_surfaces.includes('evalid launch audit --strict --json'));
 
       result = spawnSync('node', [
         'bin/xflow.js',
@@ -3096,8 +3098,8 @@ Repository names were sanitized.
       assert.equal(splashReadyPayload.splash, true);
       assert.equal(splashReadyPayload.launch_ready, true);
       assert.equal(splashReadyPayload.adoption_evidence.third_party_ok, true);
-      assert.ok(splashReadyPayload.ready_surfaces.includes('xflow adoption validate --splash --json'));
-      assert.ok(splashReadyPayload.ready_surfaces.includes('xflow launch audit --splash --strict --json'));
+      assert.ok(splashReadyPayload.ready_surfaces.includes('evalid adoption validate --splash --json'));
+      assert.ok(splashReadyPayload.ready_surfaces.includes('evalid launch audit --splash --strict --json'));
 
       result = spawnSync('node', [
         'bin/xflow.js',
@@ -3141,7 +3143,7 @@ Repository names were sanitized.
       assert.equal(payload.ok, false);
       assert.ok(payload.issues.some((issue) => issue.includes('registry evidence missing')));
       assert.ok(payload.next_actions.some((action) => action.id === 'verify_registry_publication'));
-      assert.ok(payload.next_actions.some((action) => action.command === 'xflow package audit --check-registry --json'));
+      assert.ok(payload.next_actions.some((action) => action.command === 'evalid package audit --check-registry --json'));
 
       result = spawnSync('node', [
         'bin/xflow.js',
@@ -3241,7 +3243,7 @@ Repository names were sanitized.
       assert.equal(payload.npm_identity, 'codex');
       assert.equal(payload.registry_status, 'available');
       assert.ok(payload.next_actions.some((action) => action.id === 'run_pre_publish_gate'));
-      assert.ok(payload.next_actions.some((action) => action.command === 'xflow launch audit --pre-publish --strict --json'));
+      assert.ok(payload.next_actions.some((action) => action.command === 'evalid launch audit --pre-publish --strict --json'));
 
       result = spawnSync('node', [
         'bin/xflow.js',
@@ -3382,8 +3384,8 @@ Keep the package installable while removing stale workflow instructions.
 ## Commands
 
 \`\`\`bash
-xflow goal show --json
-xflow assess --json
+evalid goal show --json
+evalid assess --json
 \`\`\`
 
 ## Evidence
@@ -3440,13 +3442,13 @@ Repository names were sanitized.
       });
 
       assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-      assert.match(result.stdout, /xflow adoption status/);
+      assert.match(result.stdout, /evalid adoption status/);
       assert.match(result.stdout, /Adoption evidence: missing/);
       assert.match(result.stdout, /Splash evidence: missing third-party adoption/);
       assert.match(result.stdout, /Blocking surfaces: adoption_evidence, third_party_adoption/);
       assert.match(result.stdout, /Next action: prepare_external_brief/);
-      assert.match(result.stdout, /External brief: xflow adoption brief --name <third-party-project> --source <public-pr-or-external-repo> --track yolo/);
-      assert.match(result.stdout, /xflow adoption validate --splash --json/);
+      assert.match(result.stdout, /External brief: evalid adoption brief --name <third-party-project> --source <public-pr-or-external-repo> --track yolo/);
+      assert.match(result.stdout, /evalid adoption validate --splash --json/);
 
       result = spawnSync('node', ['bin/xflow.js', 'adoption', 'status', '--project-root', projectRoot, '--json'], {
         cwd: REPO_ROOT,
@@ -3461,8 +3463,8 @@ Repository names were sanitized.
       assert.equal(payload.third_party_ok, false);
       assert.deepEqual(payload.blocking_surfaces, ['adoption_evidence', 'third_party_adoption']);
       assert.equal(payload.next_action.id, 'prepare_external_brief');
-      assert.equal(payload.external_brief_command, 'xflow adoption brief --name <third-party-project> --source <public-pr-or-external-repo> --track yolo');
-      assert.equal(payload.external_trial_command, 'xflow adoption trial --name <third-party-project> --source <public-pr-or-external-repo> --track yolo');
+      assert.equal(payload.external_brief_command, 'evalid adoption brief --name <third-party-project> --source <public-pr-or-external-repo> --track yolo');
+      assert.equal(payload.external_trial_command, 'evalid adoption trial --name <third-party-project> --source <public-pr-or-external-repo> --track yolo');
 
       const adoptionDir = resolve(projectRoot, 'docs', 'adoption');
       mkdirSync(adoptionDir, { recursive: true });
@@ -3483,8 +3485,8 @@ Keep the package installable while removing stale workflow instructions.
 ## Commands
 
 \`\`\`bash
-xflow goal show --json
-xflow assess --json
+evalid goal show --json
+evalid assess --json
 \`\`\`
 
 ## Evidence
@@ -3546,8 +3548,8 @@ Repository names were sanitized.
       assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
       let payload = JSON.parse(result.stdout);
       assert.equal(payload.path, 'docs/adoption/clean-project.md');
-      assert.equal(payload.next_command, 'xflow adoption validate --input docs/adoption/clean-project.md --json');
-      assert.equal(payload.splash_command, 'xflow adoption validate --input docs/adoption/clean-project.md --splash --json');
+      assert.equal(payload.next_command, 'evalid adoption validate --input docs/adoption/clean-project.md --json');
+      assert.equal(payload.splash_command, 'evalid adoption validate --input docs/adoption/clean-project.md --splash --json');
       assert.ok(payload.required_replacements.some((item) => item.includes('real external project')));
       assert.equal(existsSync(resolve(projectRoot, payload.path)), true);
       const draft = readFileSync(resolve(projectRoot, payload.path), 'utf8');
@@ -3596,16 +3598,16 @@ Repository names were sanitized.
       const payload = JSON.parse(result.stdout);
       assert.equal(payload.ok, true);
       assert.equal(payload.path, 'docs/adoption/trial-packets/clean-project.md');
-      assert.ok(payload.trial_commands.includes('xflow demo clean'));
-      assert.ok(payload.trial_commands.includes('xflow workflow validate yolo --project-root .'));
-      assert.ok(payload.trial_commands.includes('xflow corps --explain --json'));
-      assert.ok(payload.record_command.includes('xflow adoption init'));
-      assert.ok(payload.validation_commands.includes('xflow adoption validate --splash --json'));
+      assert.ok(payload.trial_commands.includes('evalid demo clean'));
+      assert.ok(payload.trial_commands.includes('evalid workflow validate yolo --project-root .'));
+      assert.ok(payload.trial_commands.includes('evalid corps --explain --json'));
+      assert.ok(payload.record_command.includes('evalid adoption init'));
+      assert.ok(payload.validation_commands.includes('evalid adoption validate --splash --json'));
 
       const kit = readFileSync(resolve(projectRoot, payload.path), 'utf8');
       assert.match(kit, /Adoption Trial Packet/);
       assert.match(kit, /not adoption evidence by itself/);
-      assert.match(kit, /xflow launch audit --splash --strict --json/);
+      assert.match(kit, /evalid launch audit --splash --strict --json/);
 
       const validate = spawnSync('node', ['bin/xflow.js', 'adoption', 'validate', '--project-root', projectRoot, '--json'], {
         cwd: REPO_ROOT,
@@ -3644,12 +3646,12 @@ Repository names were sanitized.
       });
 
       assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-      assert.match(result.stdout, /xflow adoption trial/);
-      assert.match(result.stdout, /xflow adoption kit --name 'Clean Project'/);
-      assert.match(result.stdout, /xflow workflow validate yolo --project-root \./);
-      assert.match(result.stdout, /xflow corps --explain --json/);
+      assert.match(result.stdout, /evalid adoption trial/);
+      assert.match(result.stdout, /evalid adoption kit --name 'Clean Project'/);
+      assert.match(result.stdout, /evalid workflow validate yolo --project-root \./);
+      assert.match(result.stdout, /evalid corps --explain --json/);
       assert.match(result.stdout, /Evidence to collect:/);
-      assert.match(result.stdout, /xflow adoption validate --splash --json/);
+      assert.match(result.stdout, /evalid adoption validate --splash --json/);
       assert.equal(existsSync(resolve(projectRoot, 'docs', 'adoption', 'trial-packets')), false);
 
       result = spawnSync('node', [
@@ -3676,11 +3678,11 @@ Repository names were sanitized.
       assert.equal(payload.ok, true);
       assert.equal(payload.name, 'Clean Project');
       assert.equal(payload.track, 'yolo');
-      assert.ok(payload.source_checkout_commands.includes('node bin/xflow.js demo clean'));
-      assert.ok(payload.trial_commands.includes('xflow workflow validate yolo --project-root .'));
-      assert.ok(payload.trial_packet_command.includes('xflow adoption kit'));
-      assert.ok(payload.record_command.includes('xflow adoption init'));
-      assert.ok(payload.validation_commands.includes('xflow launch audit --splash --strict --json'));
+      assert.ok(payload.source_checkout_commands.includes('node bin/evalid.js demo clean'));
+      assert.ok(payload.trial_commands.includes('evalid workflow validate yolo --project-root .'));
+      assert.ok(payload.trial_packet_command.includes('evalid adoption kit'));
+      assert.ok(payload.record_command.includes('evalid adoption init'));
+      assert.ok(payload.validation_commands.includes('evalid launch audit --splash --strict --json'));
       assert.ok(payload.evidence_to_collect.some((item) => item.includes('external project')));
     } finally {
       cleanupProjectRoot(projectRoot);
@@ -3709,10 +3711,10 @@ Repository names were sanitized.
       });
 
       assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-      assert.match(result.stdout, /xflow adoption brief/);
-      assert.match(result.stdout, /Would you be willing to run a short xflow corps trial on Clean Project\?/);
+      assert.match(result.stdout, /evalid adoption brief/);
+      assert.match(result.stdout, /Would you be willing to run a short evalid corps trial on Clean Project\?/);
       assert.match(result.stdout, /Acceptance bar:/);
-      assert.match(result.stdout, /xflow adoption validate --splash --json/);
+      assert.match(result.stdout, /evalid adoption validate --splash --json/);
       assert.equal(existsSync(resolve(projectRoot, 'docs', 'adoption', 'trial-packets')), false);
 
       result = spawnSync('node', [
@@ -3738,10 +3740,10 @@ Repository names were sanitized.
       const payload = JSON.parse(result.stdout);
       assert.equal(payload.ok, true);
       assert.equal(payload.track, 'yolo');
-      assert.ok(payload.ask_message.includes('Would you be willing to run a short xflow yolo trial on Clean Project?'));
-      assert.ok(payload.trial_packet_command.includes('xflow adoption kit'));
+      assert.ok(payload.ask_message.includes('Would you be willing to run a short evalid yolo trial on Clean Project?'));
+      assert.ok(payload.trial_packet_command.includes('evalid adoption kit'));
       assert.ok(payload.acceptance_bar.some((item) => item.includes('reviewable artifact')));
-      assert.ok(payload.maintainer_follow_up.includes('xflow adoption validate --splash --json'));
+      assert.ok(payload.maintainer_follow_up.includes('evalid adoption validate --splash --json'));
     } finally {
       cleanupProjectRoot(projectRoot);
     }
@@ -3935,7 +3937,7 @@ Repository names were sanitized.
       assert.equal(payload.entry, 'qa.ship');
       assert.equal(payload.role, 'release_qa_operator');
       assert.ok(Array.isArray(payload.release_gate));
-      assert.ok(payload.release_gate.includes('xflow launch audit --strict --json'));
+      assert.ok(payload.release_gate.includes('evalid launch audit --strict --json'));
       assert.ok(payload.capture?.entry === 'qa.capture');
 
       result = spawnSync('node', [
@@ -3961,7 +3963,7 @@ Repository names were sanitized.
       assert.ok(payload.review?.entry === 'qa.review');
       assert.ok(payload.ship?.entry === 'qa.ship');
       assert.ok(Array.isArray(payload.release_gate));
-      assert.ok(payload.release_gate.includes('xflow launch audit --strict --json'));
+      assert.ok(payload.release_gate.includes('evalid launch audit --strict --json'));
       assert.equal(existsSync(resolve(projectRoot, 'output', 'playwright', 'qa-benchmark-report.html')), true);
     } finally {
       cleanupProjectRoot(projectRoot);
@@ -3989,7 +3991,7 @@ Repository names were sanitized.
     payload = JSON.parse(result.stdout);
     assert.equal(payload.ok, true);
     assert.equal(payload.mode, 'bugfix');
-    assert.ok(payload.commands.includes('xflow goal audit --json'));
+    assert.ok(payload.commands.includes('evalid goal audit --json'));
     assert.ok(payload.stages.some((stage) => stage.includes('failing test')));
 
     result = spawnSync('node', ['bin/xflow.js', 'coach', 'qa', '--json'], {
@@ -4001,7 +4003,7 @@ Repository names were sanitized.
     payload = JSON.parse(result.stdout);
     assert.equal(payload.ok, true);
     assert.equal(payload.mode, 'qa');
-    assert.ok(payload.commands.includes('xflow qa review --url <page-url> --json'));
+    assert.ok(payload.commands.includes('evalid qa review --url <page-url> --json'));
     assert.ok(payload.stages.some((stage) => stage.includes('reference')));
 
     result = spawnSync('node', ['bin/xflow.js', 'coach', 'ship', '--json'], {
@@ -4013,7 +4015,7 @@ Repository names were sanitized.
     payload = JSON.parse(result.stdout);
     assert.equal(payload.ok, true);
     assert.equal(payload.mode, 'ship');
-    assert.ok(payload.commands.includes('xflow qa ship --url <page-url> --json'));
+    assert.ok(payload.commands.includes('evalid qa ship --url <page-url> --json'));
     assert.ok(payload.stages.some((stage) => stage.includes('launch')));
 
     result = spawnSync('node', ['bin/xflow.js', 'coach', 'tdd', '--json'], {
@@ -4025,7 +4027,7 @@ Repository names were sanitized.
     payload = JSON.parse(result.stdout);
     assert.equal(payload.ok, true);
     assert.equal(payload.mode, 'tdd');
-    assert.ok(payload.commands.includes('xflow coach bugfix --json'));
+    assert.ok(payload.commands.includes('evalid coach bugfix --json'));
     assert.ok(payload.stages.some((stage) => stage.includes('red')));
 
     result = spawnSync('node', ['bin/xflow.js', 'coach', 'debug', '--json'], {
@@ -4037,7 +4039,7 @@ Repository names were sanitized.
     payload = JSON.parse(result.stdout);
     assert.equal(payload.ok, true);
     assert.equal(payload.mode, 'debug');
-    assert.ok(payload.commands.includes('xflow coach bugfix --json'));
+    assert.ok(payload.commands.includes('evalid coach bugfix --json'));
     assert.ok(payload.stages.some((stage) => stage.includes('reproduce')));
 
     result = spawnSync('node', ['bin/xflow.js', 'coach', 'red', '--json'], {
@@ -4071,16 +4073,16 @@ Repository names were sanitized.
     payload = JSON.parse(result.stdout);
     assert.equal(payload.ok, true);
     assert.equal(payload.mode, 'verify');
-    assert.ok(payload.commands.includes('xflow launch audit --strict --json'));
+    assert.ok(payload.commands.includes('evalid launch audit --strict --json'));
   });
 
   test('role exposes named specialist operator surfaces in json mode', () => {
     const cases = [
-      ['developer', 'xflow workflow run yolo --dry-run --title "<change title>" --change-type backend'],
+      ['developer', 'evalid workflow run yolo --dry-run --title "<change title>" --change-type backend'],
       ['reviewer', 'npm run drift:scan'],
-      ['qa', 'xflow qa benchmark --url <page-url> --json'],
-      ['release', 'xflow launch audit --splash --strict --check-registry --json'],
-      ['product', 'xflow goal audit --json'],
+      ['qa', 'evalid qa benchmark --url <page-url> --json'],
+      ['release', 'evalid launch audit --splash --strict --check-registry --json'],
+      ['product', 'evalid goal audit --json'],
     ];
 
     for (const [role, expectedCommand] of cases) {
@@ -4108,7 +4110,7 @@ Repository names were sanitized.
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
     assert.match(result.stdout, /First-run commands are copy-paste safe/);
     assert.match(result.stdout, /Release-owner gates/);
-    assert.match(result.stdout, /xflow package preflight --check-registry --check-auth --json/);
+    assert.match(result.stdout, /evalid package preflight --check-registry --check-auth --json/);
 
     result = spawnSync('node', ['bin/xflow.js', 'quickstart', '--json'], {
       cwd: REPO_ROOT,
@@ -4120,22 +4122,22 @@ Repository names were sanitized.
     const payload = JSON.parse(result.stdout);
     assert.equal(payload.ok, true);
     assert.equal(payload.first_run_is_copy_paste_safe, true);
-    assert.ok(payload.published_package.commands.includes('xflow quickstart') === false);
-    assert.ok(payload.published_package.commands.includes('xflow guide'));
-    assert.ok(payload.published_package.commands.includes('xflow evaluate'));
-    assert.ok(payload.published_package.commands.includes('xflow demo clean'));
+    assert.ok(payload.published_package.commands.includes('evalid quickstart') === false);
+    assert.ok(payload.published_package.commands.includes('evalid guide'));
+    assert.ok(payload.published_package.commands.includes('evalid evaluate'));
+    assert.ok(payload.published_package.commands.includes('evalid demo clean'));
     assert.ok(payload.source_checkout.commands.includes('npm run release:pack'));
-    assert.ok(payload.source_checkout.commands.includes('node bin/xflow.js evaluate'));
-    assert.ok(payload.source_checkout.commands.includes('node bin/xflow.js demo clean'));
-    assert.ok(payload.release_owner_gates.commands.includes('xflow release status --json'));
-    assert.ok(payload.release_owner_gates.commands.includes('xflow adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo'));
-    assert.ok(payload.release_owner_gates.commands.includes('xflow adoption status --json'));
-    assert.ok(payload.release_owner_gates.commands.includes('xflow adoption validate --json'));
-    assert.ok(payload.release_owner_gates.commands.includes('xflow adoption kit --name <team-or-project> --source <tracker-or-pr> --track yolo'));
-    assert.ok(payload.release_owner_gates.commands.includes('xflow adoption validate --splash --json'));
-    assert.ok(payload.release_owner_gates.commands.includes('xflow package status --json'));
-    assert.ok(payload.release_owner_gates.commands.includes('xflow package audit --check-registry --json'));
-    assert.ok(payload.release_owner_gates.commands.includes('xflow launch audit --splash --strict --json'));
+    assert.ok(payload.source_checkout.commands.includes('node bin/evalid.js evaluate'));
+    assert.ok(payload.source_checkout.commands.includes('node bin/evalid.js demo clean'));
+    assert.ok(payload.release_owner_gates.commands.includes('evalid release status --json'));
+    assert.ok(payload.release_owner_gates.commands.includes('evalid adoption trial --name <team-or-project> --source <tracker-or-pr> --track yolo'));
+    assert.ok(payload.release_owner_gates.commands.includes('evalid adoption status --json'));
+    assert.ok(payload.release_owner_gates.commands.includes('evalid adoption validate --json'));
+    assert.ok(payload.release_owner_gates.commands.includes('evalid adoption kit --name <team-or-project> --source <tracker-or-pr> --track yolo'));
+    assert.ok(payload.release_owner_gates.commands.includes('evalid adoption validate --splash --json'));
+    assert.ok(payload.release_owner_gates.commands.includes('evalid package status --json'));
+    assert.ok(payload.release_owner_gates.commands.includes('evalid package audit --check-registry --json'));
+    assert.ok(payload.release_owner_gates.commands.includes('evalid launch audit --splash --strict --json'));
     assert.ok(payload.published_package.commands.every((command) => !command.includes('adoption validate')));
     assert.ok(payload.published_package.commands.every((command) => !command.includes('package preflight')));
     assert.ok(payload.published_package.commands.every((command) => !command.includes('package audit')));
@@ -4157,32 +4159,32 @@ Repository names were sanitized.
 
   test('primary subcommands expose help without unknown-subcommand errors', () => {
     const cases = [
-      ['workflow', /Usage: xflow workflow/],
-      ['corps', /Usage: xflow corps/],
-      ['proof', /Usage: xflow proof/],
-      ['live', /Usage: xflow live/],
-      ['atom', /Usage: xflow atom/],
-      ['gate', /Usage: xflow gate/],
-      ['doctor', /Usage: xflow doctor/],
-      ['init', /Usage: xflow init/],
-      ['goal', /Usage: xflow goal/],
-      ['score', /Usage: xflow score/],
-      ['evaluate', /Usage: xflow evaluate/],
-      ['release', /Usage: xflow release/],
-      ['assess', /Usage: xflow assess/],
-      ['demo', /Usage: xflow demo/],
-      ['launch', /Usage: xflow launch/],
-      ['adoption', /Usage: xflow adoption/],
-      ['package', /Usage: xflow package/],
-      ['compare', /Usage: xflow compare/],
-      ['adapter', /Usage: xflow adapter/],
-      ['spec', /Usage: xflow spec/],
-      ['qa', /Usage: xflow qa/],
-      ['host', /Usage: xflow host/],
-      ['coach', /Usage: xflow coach/],
-      ['role', /Usage: xflow role/],
-      ['quickstart', /Usage: xflow quickstart/],
-      ['guide', /Usage: xflow guide/],
+      ['workflow', /Usage: evalid workflow/],
+      ['corps', /Usage: evalid corps/],
+      ['proof', /Usage: evalid proof/],
+      ['live', /Usage: evalid live/],
+      ['atom', /Usage: evalid atom/],
+      ['gate', /Usage: evalid gate/],
+      ['doctor', /Usage: evalid doctor/],
+      ['init', /Usage: evalid init/],
+      ['goal', /Usage: evalid goal/],
+      ['score', /Usage: evalid score/],
+      ['evaluate', /Usage: evalid evaluate/],
+      ['release', /Usage: evalid release/],
+      ['assess', /Usage: evalid assess/],
+      ['demo', /Usage: evalid demo/],
+      ['launch', /Usage: evalid launch/],
+      ['adoption', /Usage: evalid adoption/],
+      ['package', /Usage: evalid package/],
+      ['compare', /Usage: evalid compare/],
+      ['adapter', /Usage: evalid adapter/],
+      ['spec', /Usage: evalid spec/],
+      ['qa', /Usage: evalid qa/],
+      ['host', /Usage: evalid host/],
+      ['coach', /Usage: evalid coach/],
+      ['role', /Usage: evalid role/],
+      ['quickstart', /Usage: evalid quickstart/],
+      ['guide', /Usage: evalid guide/],
     ];
     const helpArgs = ['--help', '-h', 'help'];
 
@@ -4211,7 +4213,7 @@ Repository names were sanitized.
         timeout: 1500,
       });
       assert.equal(help.status, 0, help.stderr || help.stdout || String(help.error));
-      assert.match(help.stdout, /Usage: xflow adapter/);
+      assert.match(help.stdout, /Usage: evalid adapter/);
 
       writeFileSync(resolve(projectRoot, 'tracker-item.json'), JSON.stringify({
         source: 'linear',
@@ -4279,7 +4281,7 @@ Repository names were sanitized.
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /xflow compare: superpowers/);
+    assert.match(result.stdout, /evalid compare: superpowers/);
     assert.match(result.stdout, /docs\/superpowers-comparison\.md/);
     assert.match(result.stdout, /behavior discipline/);
     assert.match(result.stdout, /Winner: xflow/);
@@ -4300,7 +4302,7 @@ Repository names were sanitized.
     assert.equal(payload.scorecard.overall.openspec, 73);
     assert.ok(payload.scorecard.dimensions.some((dimension) => dimension.id === 'spec_authoring_friction' && dimension.winner === 'tie'));
     assert.ok(payload.scorecard.dimensions.every((dimension) => Array.isArray(dimension.evidence_refs) && dimension.evidence_refs.length > 0));
-    assert.ok(payload.xflow_edges.includes('xflow spec start and spec quick scaffold specs/changes with low-friction defaults from one command'));
+    assert.ok(payload.xflow_edges.includes('evalid spec start and spec quick scaffold specs/changes with low-friction defaults from one command'));
 
     result = spawnSync('node', ['bin/xflow.js', 'compare', 'superpowers', '--json'], {
       cwd: REPO_ROOT,
@@ -4320,7 +4322,7 @@ Repository names were sanitized.
     assert.ok(superpowersPayload.scorecard.dimensions.every((dimension) => Array.isArray(dimension.evidence_refs) && dimension.evidence_refs.length > 0));
     assert.ok(superpowersPayload.scorecard.dimensions.some((dimension) => dimension.id === 'workflow_execution' && dimension.evidence_refs.includes('workflows/corps.yaml')));
     assert.ok(superpowersPayload.target_edges.some((edge) => edge.includes('behavioral guidance')));
-    assert.ok(superpowersPayload.xflow_edges.some((edge) => edge.includes('xflow coach')));
+    assert.ok(superpowersPayload.xflow_edges.some((edge) => edge.includes('evalid coach')));
 
     result = spawnSync('node', ['bin/xflow.js', 'compare', 'super-assistant', '--json'], {
       cwd: REPO_ROOT,
@@ -4355,7 +4357,7 @@ Repository names were sanitized.
     assert.equal(codexGoalPayload.scorecard.overall.codex_native_goal, 72);
     assert.ok(codexGoalPayload.scorecard.dimensions.some((dimension) => dimension.id === 'thread_local_control' && dimension.winner === 'codex_native_goal'));
     assert.ok(codexGoalPayload.scorecard.dimensions.every((dimension) => Array.isArray(dimension.evidence_refs) && dimension.evidence_refs.length > 0));
-    assert.ok(codexGoalPayload.scorecard.dimensions.some((dimension) => dimension.id === 'workflow_consumption' && dimension.evidence_refs.some((ref) => ref.includes('xflow goal audit --json'))));
+    assert.ok(codexGoalPayload.scorecard.dimensions.some((dimension) => dimension.id === 'workflow_consumption' && dimension.evidence_refs.some((ref) => ref.includes('evalid goal audit --json'))));
     assert.equal(codexGoalPayload.boundary.role, 'project_direction_anchor');
     assert.ok(codexGoalPayload.boundary.useful_when.some((item) => item.includes('thread changes')));
     assert.ok(codexGoalPayload.boundary.not_for.some((item) => item.includes('Codex native goal is enough')));
@@ -4370,7 +4372,7 @@ Repository names were sanitized.
     });
 
     assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
-    assert.match(result.stdout, /xflow compare: gstack/);
+    assert.match(result.stdout, /evalid compare: gstack/);
     assert.match(result.stdout, /Winner: xflow/);
     assert.match(result.stdout, /gstack: 80\/100/);
     assert.match(result.stdout, /docs\/gstack-comparison\.md/);

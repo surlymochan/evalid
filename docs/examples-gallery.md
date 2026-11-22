@@ -1,6 +1,6 @@
 # Examples Gallery
 
-This page collects the smallest reviewable examples that prove xflow's public
+This page collects the smallest reviewable examples that prove evalid's public
 claims without requiring a private tracker, npm publish, or a production repo.
 
 Use it as an evaluator map: start with the clean local smoke, then move to the
@@ -11,12 +11,12 @@ workflow path that matches the change type.
 Best for: first-time evaluators, CI, package reviewers.
 
 ```bash
-xflow demo clean
+evalid demo clean
 ```
 
 What it proves:
 
-- a brand-new project can initialize xflow without copying internal workflow files
+- a brand-new project can initialize evalid without copying internal workflow files
 - `.xflow/GOAL.md` becomes a durable project artifact and passes goal audit
 - doctor and `workflow validate yolo` pass against the clean consumer project
 
@@ -31,10 +31,10 @@ Reference docs:
 Best for: backend, docs, infra, and small UI changes.
 
 ```bash
-xflow init --project-root .
-xflow goal set "Ship the next verified change" --project-root .
-xflow goal audit --project-root . --json
-xflow workflow validate yolo --project-root .
+evalid init --project-root .
+evalid goal set "Ship the next verified change" --project-root .
+evalid goal audit --project-root . --json
+evalid workflow validate yolo --project-root .
 ```
 
 What it proves:
@@ -54,9 +54,9 @@ Reference docs:
 Best for: product, UI, competitor-led, or multi-agent work.
 
 ```bash
-xflow goal show --json
-xflow goal audit --json
-xflow corps --explain --json
+evalid goal show --json
+evalid goal audit --json
+evalid corps --explain --json
 ```
 
 What it proves:
@@ -76,12 +76,12 @@ Reference docs:
 Best for: teams that already use GitHub Issues, Jira, Linear, or another tracker.
 
 ```bash
-xflow adapter import-file --input docs/fixtures/tracker-item.json --project-root .
+evalid adapter import-file --input docs/fixtures/tracker-item.json --project-root .
 ```
 
 What it proves:
 
-- external systems can supply context without owning xflow workflow truth
+- external systems can supply context without owning evalid workflow truth
 - local change artifacts stay reviewable inside the repository
 - adapter work can be tested without live service credentials
 
@@ -96,9 +96,9 @@ Reference docs:
 Best for: maintainers preparing a public launch.
 
 ```bash
-xflow launch dossier
-xflow launch audit --pre-publish --strict --json
-xflow package preflight --check-registry --check-auth --json
+evalid launch dossier
+evalid launch audit --pre-publish --strict --json
+evalid package preflight --check-registry --check-auth --json
 ```
 
 What it proves:

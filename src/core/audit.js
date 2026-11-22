@@ -1584,7 +1584,7 @@ export function auditExitCode(verdict) {
 }
 
 export function renderAuditReport(report) {
-  const lines = [`xflow audit: ${report.verdict}`];
+  const lines = [`evalid audit: ${report.verdict}`];
   if (report.error) lines.push(`error: ${report.error}`);
   if (report.setup?.deps && report.setup.deps !== 'none') lines.push(`replay deps: ${report.setup.deps}`);
   if (report.nodeModules) {

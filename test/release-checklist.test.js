@@ -13,7 +13,7 @@ describe('local release checklist', () => {
 
     assert.equal(pkg.scripts.test, 'node scripts/run-tests.mjs');
     assert.equal(pkg.scripts['drift:scan'], 'node --test test/workflow-drift-scan.test.js');
-    assert.equal(pkg.scripts.doctor, 'node bin/xflow.js doctor');
+    assert.equal(pkg.scripts.doctor, 'node bin/evalid.js doctor');
     assert.equal(pkg.scripts.verify, 'npm test');
     assert.equal(pkg.scripts['skill:sync'], 'sh xflow/scripts/sync_installed_xflow_skill.sh');
     assert.equal(pkg.scripts['skill:diff'], 'sh xflow/scripts/check_installed_xflow_skill_sync.sh');

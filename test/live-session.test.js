@@ -274,7 +274,7 @@ describe('live session (M15 slice 1)', () => {
         timeout: 15000,
       });
       assert.equal(result.status, 0, result.stderr || result.stdout);
-      assert.match(result.stdout, /Usage: xflow live/);
+      assert.match(result.stdout, /Usage: evalid live/);
     }
   });
 
@@ -285,6 +285,6 @@ describe('live session (M15 slice 1)', () => {
       timeout: 15000,
     });
     assert.equal(result.status, 2);
-    assert.match(result.stderr, /Usage: xflow live/);
+    assert.match(result.stderr, /Usage: evalid live/);
   });
 });

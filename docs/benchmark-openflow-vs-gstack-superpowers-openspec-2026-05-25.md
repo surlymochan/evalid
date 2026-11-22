@@ -21,12 +21,12 @@ auditability, packaging, and claim safety.
 | Project | Command | Result | Notes |
 | --- | --- | --- | --- |
 | OpenFlow | `npm ci` | Pass | Installed local package dependencies. |
-| OpenFlow | `node bin/xflow.js doctor --project-root . --json` | Pass | 12/12 readiness checks passed. |
-| OpenFlow | `node bin/xflow.js workflow validate yolo --project-root . --json` | Pass | Public yolo workflow validates. |
-| OpenFlow | `node bin/xflow.js score --json` | Pass | `100/100`. |
-| OpenFlow | `node bin/xflow.js compare openspec --json` | Pass | OpenFlow `93`, OpenSpec `73`. |
-| OpenFlow | `node bin/xflow.js compare superpowers --json` | Pass | OpenFlow `91`, Superpowers `78`. |
-| OpenFlow | `node bin/xflow.js compare gstack --json` | Pass | OpenFlow `96`, gstack `80`. |
+| OpenFlow | `node bin/evalid.js doctor --project-root . --json` | Pass | 12/12 readiness checks passed. |
+| OpenFlow | `node bin/evalid.js workflow validate yolo --project-root . --json` | Pass | Public yolo workflow validates. |
+| OpenFlow | `node bin/evalid.js score --json` | Pass | `100/100`. |
+| OpenFlow | `node bin/evalid.js compare openspec --json` | Pass | OpenFlow `93`, OpenSpec `73`. |
+| OpenFlow | `node bin/evalid.js compare superpowers --json` | Pass | OpenFlow `91`, Superpowers `78`. |
+| OpenFlow | `node bin/evalid.js compare gstack --json` | Pass | OpenFlow `96`, gstack `80`. |
 | OpenFlow | `npm run drift:scan` | Pass | 9/9 drift checks passed. |
 | OpenFlow | `node --test test/cli-usability.test.js` | Pass | 67/67 tests passed after public-boundary updates. |
 | OpenFlow | `node --test test/competitive-readiness.test.js` | Pass | 16/16 tests passed after public-boundary updates. |

@@ -1,6 +1,6 @@
 # LangSmith verify — runnable example
 
-Runs the full `xflow langsmith verify` chain end to end **without a
+Runs the full `evalid langsmith verify` chain end to end **without a
 LangSmith account, API key, or network access**. The traces are
 recorded shapes (`runs.json`, the same payloads the bridge tests use
 in `test/fixtures/langsmith/runs.json`); the LangSmith client is an
@@ -33,7 +33,7 @@ node examples/langsmith-verify/run.mjs
 Observed output (2026-11-19, Node v24.22.1):
 
 ```text
-xflow langsmith verify — project "fixture-agents"
+evalid langsmith verify — project "fixture-agents"
 trace trace-a (4 runs) — 4 claims: 2 confirmed, 2 breach, 0 unknown
   feedback: written (evalid_claim_verified = 0.5)
 trace trace-b (1 runs) — 0 claims: 0 confirmed, 0 breach, 0 unknown
@@ -63,7 +63,7 @@ The only difference is the client — same chain, same feedback key
 and format:
 
 ```bash
-LANGSMITH_API_KEY=... xflow langsmith verify --project <name>
+LANGSMITH_API_KEY=... evalid langsmith verify --project <name>
 ```
 
 Add `--dry-run` first to print what would be written without

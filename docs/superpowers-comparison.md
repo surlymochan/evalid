@@ -35,14 +35,14 @@ but xflow now ties it on explicit behavior-discipline coverage.
 
 The scores are deliberately evidence-linked rather than vibe-only. The
 machine-readable scorecard includes `evidence_refs` per dimension, pointing to
-surfaces such as `xflow coach bugfix`, `xflow coach tdd`, `xflow coach debug`, `xflow coach red`, `xflow coach green`, `xflow coach verify`, `xflow coach qa`, `xflow coach ship`, `workflows/yolo.yaml`,
-`workflows/corps.yaml`, `test/tdd-proof.test.js`, `xflow goal audit --json`,
-`xflow launch audit --json`, and `npm run release:pack`.
+surfaces such as `evalid coach bugfix`, `evalid coach tdd`, `evalid coach debug`, `evalid coach red`, `evalid coach green`, `evalid coach verify`, `evalid coach qa`, `evalid coach ship`, `workflows/yolo.yaml`,
+`workflows/corps.yaml`, `test/tdd-proof.test.js`, `evalid goal audit --json`,
+`evalid launch audit --json`, and `npm run release:pack`.
 
 Machine-readable form:
 
 ```bash
-xflow compare superpowers --json
+evalid compare superpowers --json
 ```
 
 ## When Superpowers Wins
@@ -58,19 +58,19 @@ xflow compare superpowers --json
 - The work needs a persistent project goal, not only thread-local intent.
 - A reviewer needs proof artifacts, not only a well-written final answer.
 - A team wants yolo/corps tracks, archive ordering, handoff, and launch gates.
-- The team wants named coaching entrypoints such as `xflow coach bugfix`,
-  `xflow coach feature`, `xflow coach review`, `xflow coach tdd`,
-  `xflow coach debug`, `xflow coach red`, `xflow coach green`,
-  `xflow coach verify`, `xflow coach qa`, and
-  `xflow coach ship`.
+- The team wants named coaching entrypoints such as `evalid coach bugfix`,
+  `evalid coach feature`, `evalid coach review`, `evalid coach tdd`,
+  `evalid coach debug`, `evalid coach red`, `evalid coach green`,
+  `evalid coach verify`, `evalid coach qa`, and
+  `evalid coach ship`.
 - A public launch claim must be backed by commands such as:
 
 ```bash
-xflow compare superpowers --json
-xflow launch dossier
-xflow score --json
-xflow workflow validate yolo
-xflow workflow validate corps
+evalid compare superpowers --json
+evalid launch dossier
+evalid score --json
+evalid workflow validate yolo
+evalid workflow validate corps
 npm run release:pack
 ```
 
