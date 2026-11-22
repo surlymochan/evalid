@@ -3,6 +3,14 @@
 All notable changes to this project are documented here. Detailed notes live in
 [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
+## [0.5.38] - 2026-11-23
+
+### Added
+- **Milestone M17 "LangSmith 融合——外部确定性裁判" — accepted (epic issue #215, closed 2026-11-22T17:29:00Z)**: evalid acts as an external deterministic judge for LangSmith. The bridge core shipped in 0.5.37 (PR #217, `xflow langsmith verify`: pull a LangSmith project's traces with the official JS SDK, replay-verify the agent's claims locally against file/test ground truth with unchanged verification semantics, write the verdict back with `createFeedback` under the key `evalid_claim_verified`). This release accepts the milestone on live evidence: an end-to-end run against the real LangSmith project `evalid-live-acceptance` verified 4 claims — 2 confirmed, 2 breach — and the written feedback score `evalid_claim_verified` = 0.5 (confirmed/checked = 2/4) was read back through the LangSmith API and independently re-read and verified by the main round, not taken from worker reports. Bridge behavior, covered by the fixture full-chain tests: traces with no agent claims get no feedback write; a feedback write failure is an explicit error with the local results preserved on disk; a missing `LANGSMITH_API_KEY` exits with code 2 and names the variable.
+- **M17 slice 2 — README integration section + runnable example (PR #220, merged 2026-11-19T01:48:05Z, squash 0619a78; fixes issue #218)**: README gains a LangSmith integration section, and `examples/langsmith-verify/` carries a runnable offline example (recorded runs fixture + demo workspace) guarded by `test/langsmith-example.test.js`. Evidence: merged-main CI run 44439617159 success.
+
+Honest note, stated plainly: the live acceptance sample is one real project and 4 claims — enough to prove the pull → verify → write-back chain end to end against the real API, not a statistical claim about verdict accuracy. No other unmeasured numbers are claimed in this release.
+
 ## [0.5.37] - 2026-11-19
 
 ### Added
