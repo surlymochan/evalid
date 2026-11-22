@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.5.39 - CLI renamed: the command is now `evalid`
+
+Rename release. One merged PR since 0.5.38, no functional changes.
+
+**CLI primary name `xflow` -> `evalid`, alias kept (PR #225, squash-merged to main as efb2394; PR CI ledger pass run 45054612566, verify pass run 45054612708).** The product was renamed openflow -> evalid earlier in the 0.5.x line, but the installed binary kept the workflow-engine-era name `xflow`; per the user's 2026-11-23 directive the binary now matches the product name. `bin/evalid.js` is the real entry point (moved from `bin/xflow.js`); `bin/xflow.js` remains as a thin compatibility shim importing the same entry, so existing scripts and muscle memory keep working — both commands' `--help` output is byte-identical, guarded by new package-entry tests. User-facing text switched throughout: help banner and Usage lines, guide/quickstart/doctor/evaluate/demo/coach output, stderr prefixes, audit/trend/langsmith render headers, README and docs command examples; the compatibility alias is noted once in help and README. Deliberately unchanged: `.xflow/` and `.as-xflow/` state directories, `XFLOW_*` environment variables, the `xflow/` skill directory and skill names, internal identifiers (including compare/score arm labels), and historical changelog/release-notes entries.
+
 ## 0.5.38 - Milestone M17 accepted (LangSmith bridge, live-verified)
 
 Milestone release. One merged PR since 0.5.37, plus the live acceptance that 0.5.37 explicitly left open — M17 is now accepted on real-project evidence.

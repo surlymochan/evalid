@@ -3,6 +3,11 @@
 All notable changes to this project are documented here. Detailed notes live in
 [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
+## [0.5.39] - 2026-11-23
+
+### Changed
+- **CLI renamed: `evalid` is now the primary command name; `xflow` kept as a compatibility alias (PR #225, squash-merged to main as efb2394; PR CI ledger pass run 45054612566, verify pass run 45054612708)**. The package was renamed openflow -> evalid in 0.5.x, but the CLI binary kept the workflow-engine-era name `xflow`; per the user's 2026-11-23 directive the binary now matches the product. `bin/evalid.js` is the real entry (moved from `bin/xflow.js`); `bin/xflow.js` is a thin shim importing the same entry, and both commands' `--help` output is byte-identical (guarded by new package-entry tests). All user-facing text switched to evalid: help banner and Usage lines, guide/quickstart/doctor/evaluate/demo/coach output, stderr prefixes, audit/trend/langsmith render headers, README and docs command examples; the alias is noted once in help and README. Unchanged by design: `.xflow/` and `.as-xflow/` state directories, `XFLOW_*` environment variables, the `xflow/` skill directory and skill names, internal identifiers (including compare/score arm labels), and all historical CHANGELOG/RELEASE_NOTES entries. No functional or behavior changes in this release.
+
 ## [0.5.38] - 2026-11-23
 
 ### Added
