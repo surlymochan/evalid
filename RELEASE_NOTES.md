@@ -1,5 +1,17 @@
 # Release Notes
 
+## 0.5.38 - Milestone M17 accepted (LangSmith bridge, live-verified)
+
+Milestone release. One merged PR since 0.5.37, plus the live acceptance that 0.5.37 explicitly left open — M17 is now accepted on real-project evidence.
+
+**Milestone M17 "LangSmith 融合——外部确定性裁判" — accepted (epic issue #215, closed 2026-11-22T17:29:00Z).** evalid as an external deterministic judge for LangSmith: the `xflow langsmith verify` subcommand (bridge core PR #217, shipped in 0.5.37) pulls a LangSmith project's traces via the official JS SDK, maps each trace to one verification session, replays the agent's claims locally against file/test ground truth with unchanged verification semantics, and writes the verdict back with `createFeedback` under the key `evalid_claim_verified` (score = confirmed/checked, with a per-claim verdict comment). Credentials come only from env `LANGSMITH_API_KEY`; a missing key exits with code 2 and names the variable. Traces with no agent claims get no feedback write; a feedback write failure is an explicit error and the local results are preserved on disk.
+
+**Live acceptance evidence, measured against the real API and independently re-read by the main round.** End-to-end run against the real LangSmith project `evalid-live-acceptance`: 4 claims verified — 2 confirmed, 2 breach; the feedback written to the root run was read back through the LangSmith API as `evalid_claim_verified` = 0.5, matching confirmed/checked = 2/4.
+
+**M17 slice 2 — README integration + runnable example (PR #220, merged 2026-11-19T01:48:05Z, squash 0619a78; fixes issue #218).** README gains a LangSmith integration section; `examples/langsmith-verify/` adds a runnable offline example (recorded runs fixture + demo workspace) guarded by `test/langsmith-example.test.js`. Merged-main CI run 44439617159 success.
+
+Honest note, stated plainly: the live acceptance sample is one real project and 4 claims — it proves the pull → verify → write-back chain against the real LangSmith API, and nothing more; no accuracy rate is inferred from it. No other unmeasured numbers are claimed in this release.
+
 ## 0.5.37 - Milestone M16 accepted; M17 slice 1 merged
 
 Milestone release. Three merged PRs since 0.5.36, verified end to end in CI and locally — M16 is now accepted on its honest verdicts (two of the three ledger items not passing); M17 slice 1 is merged but the milestone is not accepted yet.
