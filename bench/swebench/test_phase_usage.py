@@ -7,7 +7,10 @@ phase_usage buckets pi message usage into execution-log phase windows at
 generation time. These tests pin that join: window construction (incl.
 resume runs and unterminated phases), usage bucketing (assistant
 message_end only, epoch-ms message timestamps), the outside bucket, and
-the runs->phases file naming. Stdlib only.
+the runs->phases file naming. M19 slice 1 (#230) adds: active-interval
+windows (phase_completed / workflow_failed no longer close), the
+executor subsession channel (agent_end usage joins its own phase row),
+and the phases − runs == subsession reconciliation. Stdlib only.
 """
 import importlib.util
 import json
@@ -134,6 +137,138 @@ class PhasesPathTest(unittest.TestCase):
         self.assertEqual(PU.phases_path_for(Path("results/runs-m16s2-full.jsonl")),
                          Path("results/phases-m16s2-full.jsonl"))
         self.assertEqual(PU.phases_path_for(Path("results/runs.jsonl")), Path("results/phases.jsonl"))
+
+
+def agent_end(offset_s, phase, usage, event="agent_end"):
+    record = {"timestamp": iso(offset_s), "kind": "agent_event",
+              "event": event, "phase": phase}
+    if usage is not None:
+        record["usage"] = usage
+    return json.dumps(record)
+
+
+class PhaseWindowActiveIntervalTest(unittest.TestCase):
+    """M19 slice 1 (#230 fix 1): windows are active intervals."""
+
+    def test_phase_completed_does_not_close_window(self):
+        with TemporaryDirectory() as d:
+            log = Path(d) / "execution.ndjson"
+            log.write_text("\n".join([
+                log_line(0, "workflow_started", workflow_run_id="wf_1"),
+                log_line(1, "phase_started", phase_id="plan", workflow_run_id="wf_1"),
+                log_line(5, "phase_completed", phase_id="plan", workflow_run_id="wf_1"),
+                log_line(7, "gate_check", phase_id="plan"),
+                log_line(9, "workflow_completed", workflow_run_id="wf_1"),
+            ]))
+            windows = PU.phase_windows(log)
+            self.assertEqual(len(windows), 1)
+            self.assertEqual(windows[0]["phase"], "plan")
+            self.assertEqual(windows[0]["start_ms"], ms(1))
+            self.assertEqual(windows[0]["end_ms"], ms(9))
+
+    def test_workflow_failed_does_not_close_window(self):
+        with TemporaryDirectory() as d:
+            log = Path(d) / "execution.ndjson"
+            log.write_text("\n".join([
+                log_line(1, "phase_started", phase_id="plan", workflow_run_id="wf_1"),
+                log_line(5, "workflow_failed", workflow_run_id="wf_1"),
+                log_line(7, "gate_check", phase_id="plan"),
+                log_line(9, "workflow_completed", workflow_run_id="wf_1"),
+            ]))
+            windows = PU.phase_windows(log)
+            self.assertEqual(len(windows), 1)
+            self.assertEqual(windows[0]["end_ms"], ms(9))
+
+    def test_message_after_phase_completed_still_buckets_into_phase(self):
+        with TemporaryDirectory() as d:
+            log = Path(d) / "execution.ndjson"
+            log.write_text("\n".join([
+                log_line(1, "phase_started", phase_id="plan", workflow_run_id="wf_1"),
+                log_line(5, "phase_completed", phase_id="plan", workflow_run_id="wf_1"),
+                log_line(9, "workflow_completed", workflow_run_id="wf_1"),
+            ]))
+            windows = PU.phase_windows(log)
+            events = Path(d) / "agent-events.jsonl"
+            events.write_text(message(7, {"input": 10, "output": 5, "cacheRead": 100}))
+            buckets = PU.bucket_usage(events, windows)
+            self.assertEqual(buckets[("wf_1", "plan")]["input"], 10)
+            self.assertNotIn((None, PU.OUTSIDE_PHASE), buckets)
+
+
+class SubsessionBucketTest(unittest.TestCase):
+    """M19 slice 1 (#230 fix 2): agent_end usage joins its own phase row."""
+
+    def _cell(self, d):
+        root = Path(d)
+        repo = root / "repo"
+        (repo / ".as-xflow" / "logs").mkdir(parents=True)
+        (repo / ".as-xflow" / "logs" / "execution.ndjson").write_text("\n".join([
+            log_line(1, "phase_started", phase_id="plan", workflow_run_id="wf_9"),
+            agent_end(2, "plan", {"input": 100, "output": 50, "cache_read": 1000, "cache_write": 10}),
+            agent_end(3, "execute", {"input": 7, "output": 3, "cache_read": 70, "cache_write": 0}),
+            json.dumps({"timestamp": iso(3), "kind": "agent_event", "event": "tool_start",
+                        "phase": "plan", "tool": "shell"}),
+            agent_end(3, "plan", None),  # no usage reported: skipped
+            log_line(4, "workflow_completed", workflow_run_id="wf_9"),
+        ]))
+        events = root / "events"
+        events.mkdir()
+        (events / "agent-events.jsonl").write_text(
+            message(2, {"input": 10, "output": 5, "cacheRead": 100, "cacheWrite": 0}))
+        return repo, events
+
+    def test_agent_end_merges_into_same_named_phase_row(self):
+        with TemporaryDirectory() as d:
+            repo, events = self._cell(d)
+            rows = PU.cell_phase_rows("tid-1", "sympy__sympy-1", "openflow", 1, repo, events)
+            by_phase = {r["phase"]: r for r in rows}
+            plan = by_phase["plan"]
+            self.assertEqual(plan["workflow_run_id"], "wf_9")
+            self.assertEqual(plan["turns"], 2)  # 1 pi message + 1 agent_end
+            self.assertEqual(plan["input"], 110)
+            self.assertEqual(plan["output"], 55)
+            self.assertEqual(plan["cache_read"], 1100)
+            self.assertEqual(plan["cache_write"], 10)
+            # Phase with no window still lands as its own (None, phase) row.
+            execute = by_phase["execute"]
+            self.assertIsNone(execute["workflow_run_id"])
+            self.assertEqual(execute["turns"], 1)
+            self.assertEqual(execute["input"], 7)
+
+    def test_subsession_totals_and_reconcile(self):
+        with TemporaryDirectory() as d:
+            repo, events = self._cell(d)
+            log = repo / ".as-xflow" / "logs" / "execution.ndjson"
+            windows = PU.phase_windows(log)
+            subs = PU.bucket_subsession_usage(log, windows)
+            self.assertEqual(PU.subsession_totals(subs),
+                             {"turns": 2, "input": 107, "output": 53,
+                              "cache_read": 1070, "cache_write": 10})
+            rows = PU.cell_phase_rows("tid-1", "sympy__sympy-1", "openflow", 1, repo, events)
+            runs_usage = {"turns": 1, "input": 10, "output": 5,
+                          "cache_read": 100, "cache_write": 0}
+            rec = PU.reconcile(rows, runs_usage)
+            self.assertEqual(rec["difference"], PU.subsession_totals(subs))
+
+    def test_pure_bench_cell_reconciles_to_zero(self):
+        with TemporaryDirectory() as d:
+            root = Path(d)
+            repo = root / "repo"
+            (repo / ".as-xflow" / "logs").mkdir(parents=True)
+            (repo / ".as-xflow" / "logs" / "execution.ndjson").write_text("\n".join([
+                log_line(1, "phase_started", phase_id="plan", workflow_run_id="wf_9"),
+                log_line(4, "workflow_completed", workflow_run_id="wf_9"),
+            ]))
+            events = root / "events"
+            events.mkdir()
+            (events / "agent-events.jsonl").write_text(
+                message(2, {"input": 10, "output": 5, "cacheRead": 100, "cacheWrite": 0}))
+            rows = PU.cell_phase_rows("tid-1", "x", "baseline", 1, repo, events)
+            rec = PU.reconcile(rows, {"turns": 1, "input": 10, "output": 5,
+                                      "cache_read": 100, "cache_write": 0})
+            self.assertEqual(rec["difference"],
+                             {"turns": 0, "input": 0, "output": 0,
+                              "cache_read": 0, "cache_write": 0})
 
 
 if __name__ == "__main__":
